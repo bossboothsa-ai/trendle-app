@@ -104,10 +104,49 @@ export async function registerRoutes(
   app.post(api.rewards.redeem.path, async (req, res) => {
     try {
       const rewardId = Number(req.params.id);
+      const { type } = req.body;
       const userId = 1;
-      await storage.redeemReward(userId, rewardId);
+      await storage.redeemReward(userId, rewardId, type);
       const user = await storage.getUser(userId);
       res.json({ success: true, newPoints: user!.points });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.get(api.rewards.history.path, async (req, res) => {
+    const history = await storage.getRewardHistory(1);
+    res.json(history);
+  });
+
+  // === SURVEYS ===
+  app.get(api.surveys.list.path, async (req, res) => {
+    const s = await storage.getSurveys();
+    res.json(s);
+  });
+
+  app.post(api.surveys.submit.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { answers } = req.body;
+      await storage.submitSurveyResponse(1, id, answers);
+      res.json({ success: true, points: 100 });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // === DAILY TASKS ===
+  app.get(api.dailyTasks.list.path, async (req, res) => {
+    const t = await storage.getDailyTasks(1);
+    res.json(t);
+  });
+
+  app.post(api.dailyTasks.complete.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.completeDailyTask(1, id);
+      res.json({ success: true, points: 10 });
     } catch (err: any) {
       res.status(400).json({ message: err.message });
     }
@@ -131,13 +170,9 @@ export async function registerRoutes(
       
       if (Math.random() > 0.5) {
         // Mock Like
-        // We don't want to actually spam the DB with duplicate likes if they exist, 
-        // but for simulation visual effect we just want to update the count usually.
-        // But let's be clean:
         const existing = await storage.getLike(randomActorId, randomPost.id);
         if (!existing) {
           await storage.createLike({ userId: randomActorId, postId: randomPost.id });
-          // If it's MY post, notify me
           if (randomPost.userId === 1) {
             await storage.createNotification({ 
               userId: 1, type: "like", actorId: randomActorId, 
