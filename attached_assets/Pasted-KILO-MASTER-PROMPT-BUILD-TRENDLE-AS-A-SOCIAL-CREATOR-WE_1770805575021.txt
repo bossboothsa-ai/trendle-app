@@ -1,0 +1,147 @@
+KILO MASTER PROMPT — BUILD TRENDLE AS A SOCIAL CREATOR WEB APP (REACT)
+
+Goal
+Build Trendle as a modern social web app (creator + check-in + rewards) that feels alive and active, not like a system/dashboard. It must function smoothly on both mobile and desktop (fully responsive). Use React and a clean, maintainable component structure.
+
+Core Product Feel
+Trendle should feel like a social creator space (Snapchat/IG Stories energy) + local check-ins + rewards:
+- image-first UI
+- vibrant, playful, modern
+- minimal reading, fast tapping
+- micro-interactions (points count-up, quick toasts, subtle animations)
+- everything looks like it’s already active in Cape Town (mock real-time feed)
+
+Tech Requirements
+- React (Vite preferred) + TypeScript if possible
+- Tailwind OR CSS modules (choose one and be consistent)
+- Responsive UI: mobile-first, then desktop enhancements
+- Routing with React Router
+- No backend: use realistic mock data + simulated “real-time” updates via timers
+- Must run locally: npm install, npm run dev, open localhost
+- Provide clear README instructions
+
+Navigation / Pages
+Use bottom navigation on mobile and sidebar/topbar on desktop.
+Tabs:
+1) Home (social feed)
+2) Explore (places)
+3) Create (moment post flow)
+4) Rewards (prize vault)
+5) Profile (creator identity)
+
+Social Features (NEW — required)
+Implement social interactions across the app:
+- Like posts (hearts)
+- Comment on posts (text input + comment list)
+- Follow/unfollow users
+- User profiles show follower/following counts
+- A “Following” feed filter (Home: For You / Following)
+- Notifications panel (mock): “X liked your moment”, “Y followed you”, “Z commented”
+
+Points System (UPDATED — required logic)
+Keep the existing points and add social points:
+Core actions:
+- Visit/check-in at a partner venue: +50
+- Post a moment (photo): +40
+- Add a review caption (if caption length > threshold): +15
+- Daily app check-in: +10
+- Refer friend (mock): +100
+
+Social actions:
+- Follow a user: +5 points (only once per user, prevent farming by unfollow/refollow abuse)
+- Like a post: +1 point (cap likes/day to prevent farming, e.g. max 30/day)
+- Comment on a post: +1 point (cap comments/day to prevent spam, e.g. max 20/day)
+
+Levels:
+- Silver: 0–499
+- Gold: 500–1499
+- Platinum: 1500+
+
+Show points feedback with micro-animations/toasts:
+- “+1 point (Like)”
+- “+5 points (Follow)”
+- “+1 point (Comment)”
+
+Screen Requirements
+
+1) Home — Live Social Feed (NOT dashboard)
+- Top: “Nearby Stories” horizontal scroll of place/photo bubbles (like IG stories)
+- Toggle: “For You” vs “Following”
+- Floating “Create Moment” button
+- Feed: vertical posts with image, caption, user name, place tag, timestamp, points earned
+- Each post has: Like button, Comment button, Share (optional), and a Follow button on the user header if not followed
+- Live Activity chips: “12 people earned points today”, “3 rewards claimed today”
+- Points + Level badge visible but not dominant (small pill)
+
+2) Explore — Visual Discovery
+- Visual grid/feed of place cards with big images
+- Overlay: name, distance, points per visit, number of active offers
+- Place detail page:
+  - Moments posted at this place (feed/grid)
+  - Offers/rewards available here
+  - Check-in button
+  - “Create moment here” shortcut
+
+3) Create Moment — Fast Post Flow
+- Upload photo (drag/drop + mobile picker)
+- Select place (search + recent)
+- Add short caption (optional, but rewards +15 if meaningful length)
+- Post
+- After post: celebration animation + points earned
+- New post appears immediately in Home feed
+
+4) Rewards — Prize Vault
+- Reward cards with images (coffee/cocktail/discount/cash/airtime)
+- Show points required + Redeem CTA
+- Lock/unlock based on points
+- Redemption modal + toast
+- “Redeemed” history list
+
+5) Profile — Creator Identity + Social Graph
+- Avatar, username, level badge, total points
+- Followers / Following counts (clickable lists)
+- Grid of user’s moments
+- Stats: visits, posts, likes received, comments received, redemptions
+- Button: Edit profile (minimal), View badges/achievements
+
+Mock Data + “Real-Time” Simulation (must feel live)
+- Generate realistic Cape Town venue data (CBD + within 10km):
+  Examples: The Bean Bar (De Waterkant), Copper & Steam (Buitenkant St), etc.
+- Generate 50–100 mock users (names, avatars)
+- Generate 60–120 mock posts with realistic captions, place tags, timestamps, likes/comments counts
+- Use image URLs placeholders that can later be replaced with AI images; structure data so images swap easily
+- Simulate real-time:
+  - every 8–15 seconds inject a new post
+  - randomly increment likes/comments on existing posts
+  - randomly generate “X followed you” events into notifications
+  - keep it believable (don’t spam)
+
+Anti-Spam / Farming Rules (important)
+- Following points only awarded once per unique follow target
+- Daily caps for likes/comments to avoid obvious farming
+- Comments must be > 2–3 words to count for points (to prevent “hi” spam)
+- Add basic UI messaging when caps are hit (“Daily like points limit reached”)
+
+Visual Design Requirements
+- Gen Z, social, lively (NOT corporate, NOT dashboard)
+- Image-first UI, rounded cards, soft shadows, clean typography
+- Light purple palette with vibrant accents for points/rewards
+- Avoid heavy “system” sections; use overlays, chips, floating elements
+- Consistent spacing and components across all pages
+
+Deliverables / Output
+- Full React project structure with clean components:
+  /src
+    /components (PostCard, CommentSheet/Modal, FollowButton, StoryRow, RewardCard, Nav, Toasts, NotificationsDrawer)
+    /pages (Home, Explore, PlaceDetail, Create, Rewards, Profile, UserProfile)
+    /data (mockGenerators, mockData, realtimeSim)
+    /styles
+- Working routing/navigation
+- Fully responsive layouts for mobile + desktop
+- README with run instructions and where to edit
+- Ensure the app never looks empty: always filled with realistic activity and images.
+
+Constraints
+- No real backend
+- No empty placeholders
+- Must feel like it’s already live in Cape Town with active users, follows, likes, and comments
