@@ -1,7 +1,9 @@
 import { db } from "./db";
 import {
   users, places, posts, comments, likes, follows, rewards, userRewards, notifications,
-  type User, type Place, type Post, type Comment, type Like, type Follow, type Reward, type Notification
+  surveys, surveyResponses, dailyTasks, userDailyTasks,
+  type User, type Place, type Post, type Comment, type Like, type Follow, type Reward, type Notification,
+  type Survey, type SurveyResponse, type DailyTask, type UserDailyTask
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 
@@ -30,7 +32,16 @@ export interface IStorage {
   
   // Rewards
   getRewards(): Promise<Reward[]>;
-  redeemReward(userId: number, rewardId: number): Promise<UserReward>;
+  redeemReward(userId: number, rewardId: number, type: string): Promise<UserReward>;
+  getRewardHistory(userId: number): Promise<(UserReward & { reward: Reward })[]>;
+
+  // Surveys
+  getSurveys(): Promise<Survey[]>;
+  submitSurveyResponse(userId: number, surveyId: number, answers: any): Promise<SurveyResponse>;
+
+  // Daily Tasks
+  getDailyTasks(userId: number): Promise<(DailyTask & { completed: boolean })[]>;
+  completeDailyTask(userId: number, taskId: number): Promise<UserDailyTask>;
 
   // Notifications
   getNotifications(userId: number): Promise<Notification[]>;
@@ -165,7 +176,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(rewards);
   }
 
-  async redeemReward(userId: number, rewardId: number): Promise<UserReward> {
+  async redeemReward(userId: number, rewardId: number, type: string): Promise<UserReward> {
     const [reward] = await db.select().from(rewards).where(eq(rewards.id, rewardId));
     const user = await this.getUser(userId);
     
@@ -173,8 +184,52 @@ export class DatabaseStorage implements IStorage {
     if (user.points < reward.cost) throw new Error("Not enough points");
 
     await this.updateUserPoints(userId, user.points - reward.cost);
-    const [redemption] = await db.insert(userRewards).values({ userId, rewardId }).returning();
+    const [redemption] = await db.insert(userRewards).values({ userId, rewardId, type, status: "pending" }).returning();
     return redemption;
+  }
+
+  async getRewardHistory(userId: number): Promise<(UserReward & { reward: Reward })[]> {
+    const history = await db.select().from(userRewards).where(eq(userRewards.userId, userId)).orderBy(desc(userRewards.redeemedAt));
+    const results = [];
+    for (const h of history) {
+      const [reward] = await db.select().from(rewards).where(eq(rewards.id, h.rewardId));
+      if (reward) results.push({ ...h, reward });
+    }
+    return results;
+  }
+
+  async getSurveys(): Promise<Survey[]> {
+    return await db.select().from(surveys);
+  }
+
+  async submitSurveyResponse(userId: number, surveyId: number, answers: any): Promise<SurveyResponse> {
+    const [survey] = await db.select().from(surveys).where(eq(surveys.id, surveyId));
+    if (!survey) throw new Error("Survey not found");
+    
+    const [response] = await db.insert(surveyResponses).values({ userId, surveyId, answers }).returning();
+    const user = await this.getUser(userId);
+    if (user) await this.updateUserPoints(userId, user.points + survey.points);
+    return response;
+  }
+
+  async getDailyTasks(userId: number): Promise<(DailyTask & { completed: boolean })[]> {
+    const tasks = await db.select().from(dailyTasks);
+    const results = [];
+    for (const t of tasks) {
+      const [comp] = await db.select().from(userDailyTasks).where(and(eq(userDailyTasks.userId, userId), eq(userDailyTasks.taskId, t.id)));
+      results.push({ ...t, completed: !!comp });
+    }
+    return results;
+  }
+
+  async completeDailyTask(userId: number, taskId: number): Promise<UserDailyTask> {
+    const [task] = await db.select().from(dailyTasks).where(eq(dailyTasks.id, taskId));
+    if (!task) throw new Error("Task not found");
+    
+    const [comp] = await db.insert(userDailyTasks).values({ userId, taskId }).returning();
+    const user = await this.getUser(userId);
+    if (user) await this.updateUserPoints(userId, user.points + task.points);
+    return comp;
   }
 
   async getNotifications(userId: number): Promise<Notification[]> {
@@ -237,7 +292,22 @@ export class DatabaseStorage implements IStorage {
        await db.insert(rewards).values(r);
     }
 
-    // 5. Notifications
+    // 5. Surveys & Tasks
+    await db.insert(surveys).values({
+      title: "Cape Town Lifestyle",
+      description: "Tell us about your favorite spots",
+      points: 100,
+      questions: [{ question: "How often do you visit CBD?", options: ["Daily", "Weekly", "Monthly"] }]
+    });
+
+    await db.insert(dailyTasks).values({
+      title: "Morning Check-in",
+      description: "Open the app before 10 AM",
+      points: 10,
+      type: "check-in"
+    });
+
+    // 6. Notifications
     await this.createNotification({ userId: 1, type: "like", actorId: 2, message: "Jessica liked your photo" });
     await this.createNotification({ userId: 1, type: "follow", actorId: 3, message: "Mike started following you" });
   }

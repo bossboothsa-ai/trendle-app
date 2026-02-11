@@ -5,12 +5,17 @@ import {
   insertPostSchema, 
   insertCommentSchema,
   insertRewardSchema,
+  insertSurveyResponseSchema,
   users,
   places,
   posts,
   rewards,
   notifications,
-  comments
+  comments,
+  surveys,
+  dailyTasks,
+  userRewards,
+  userDailyTasks
 } from './schema';
 
 export const errorSchemas = {
@@ -136,10 +141,57 @@ export const api = {
     redeem: {
       method: 'POST' as const,
       path: '/api/rewards/:id/redeem' as const,
+      input: z.object({ type: z.enum(['airtime', 'voucher', 'discount']) }),
       responses: {
         200: z.object({ success: z.boolean(), newPoints: z.number() }),
         400: z.object({ message: z.string() }), // E.g. not enough points
       },
+    },
+    history: {
+      method: 'GET' as const,
+      path: '/api/rewards/history' as const,
+      responses: {
+        200: z.array(z.custom<typeof userRewards.$inferSelect & { reward: typeof rewards.$inferSelect }>()),
+      }
+    }
+  },
+
+  // === SURVEYS ===
+  surveys: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/surveys' as const,
+      responses: {
+        200: z.array(z.custom<typeof surveys.$inferSelect>()),
+      }
+    },
+    submit: {
+      method: 'POST' as const,
+      path: '/api/surveys/:id/submit' as const,
+      input: z.object({ answers: z.any() }),
+      responses: {
+        200: z.object({ success: z.boolean(), points: z.number() }),
+        400: z.object({ message: z.string() }),
+      }
+    }
+  },
+
+  // === DAILY TASKS ===
+  dailyTasks: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/daily-tasks' as const,
+      responses: {
+        200: z.array(z.custom<typeof dailyTasks.$inferSelect & { completed: boolean }>()),
+      }
+    },
+    complete: {
+      method: 'POST' as const,
+      path: '/api/daily-tasks/:id/complete' as const,
+      responses: {
+        200: z.object({ success: z.boolean(), points: z.number() }),
+        400: z.object({ message: z.string() }),
+      }
     }
   },
 

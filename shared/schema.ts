@@ -70,7 +70,40 @@ export const userRewards = pgTable("user_rewards", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   rewardId: integer("reward_id").notNull(),
+  status: text("status").default("pending").notNull(), // pending, paid, settled
+  type: text("type").notNull(), // airtime, voucher, discount
   redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
+});
+
+export const surveys = pgTable("surveys", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  points: integer("points").notNull(),
+  questions: jsonb("questions").notNull(), // array of { question, options }
+});
+
+export const surveyResponses = pgTable("survey_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  surveyId: integer("survey_id").notNull(),
+  answers: jsonb("answers").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const dailyTasks = pgTable("daily_tasks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  points: integer("points").notNull(),
+  type: text("type").notNull(), // check-in, share, etc.
+});
+
+export const userDailyTasks = pgTable("user_daily_tasks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  taskId: integer("task_id").notNull(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
 });
 
 export const notifications = pgTable("notifications", {
@@ -93,6 +126,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   following: many(follows, { relationName: "userFollowing" }),
   rewards: many(userRewards),
   notifications: many(notifications),
+  surveyResponses: many(surveyResponses),
+  dailyTasks: many(userDailyTasks),
 }));
 
 export const placesRelations = relations(places, ({ many }) => ({
@@ -145,6 +180,28 @@ export const userRewardsRelations = relations(userRewards, ({ one }) => ({
   }),
 }));
 
+export const surveyResponsesRelations = relations(surveyResponses, ({ one }) => ({
+  user: one(users, {
+    fields: [surveyResponses.userId],
+    references: [users.id],
+  }),
+  survey: one(surveys, {
+    fields: [surveyResponses.surveyId],
+    references: [surveys.id],
+  }),
+}));
+
+export const userDailyTasksRelations = relations(userDailyTasks, ({ one }) => ({
+  user: one(users, {
+    fields: [userDailyTasks.userId],
+    references: [users.id],
+  }),
+  task: one(dailyTasks, {
+    fields: [userDailyTasks.taskId],
+    references: [dailyTasks.id],
+  }),
+}));
+
 // === INFER TYPES ===
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, points: true, level: true });
@@ -154,6 +211,9 @@ export const insertCommentSchema = createInsertSchema(comments).omit({ id: true,
 export const insertLikeSchema = createInsertSchema(likes).omit({ id: true });
 export const insertFollowSchema = createInsertSchema(follows).omit({ id: true });
 export const insertRewardSchema = createInsertSchema(rewards).omit({ id: true });
+export const insertSurveySchema = createInsertSchema(surveys).omit({ id: true });
+export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, createdAt: true });
+export const insertDailyTaskSchema = createInsertSchema(dailyTasks).omit({ id: true });
 
 export type User = typeof users.$inferSelect;
 export type Place = typeof places.$inferSelect;
@@ -164,3 +224,7 @@ export type Follow = typeof follows.$inferSelect;
 export type Reward = typeof rewards.$inferSelect;
 export type UserReward = typeof userRewards.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type Survey = typeof surveys.$inferSelect;
+export type SurveyResponse = typeof surveyResponses.$inferSelect;
+export type DailyTask = typeof dailyTasks.$inferSelect;
+export type UserDailyTask = typeof userDailyTasks.$inferSelect;
