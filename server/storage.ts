@@ -3,7 +3,8 @@ import {
   users, places, posts, comments, likes, follows, rewards, userRewards, notifications,
   surveys, surveyResponses, dailyTasks, userDailyTasks,
   type User, type Place, type Post, type Comment, type Like, type Follow, type Reward, type Notification,
-  type Survey, type SurveyResponse, type DailyTask, type UserDailyTask
+  type Survey, type SurveyResponse, type DailyTask, type UserDailyTask,
+  type UserReward as SharedUserReward
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 
@@ -32,8 +33,8 @@ export interface IStorage {
   
   // Rewards
   getRewards(): Promise<Reward[]>;
-  redeemReward(userId: number, rewardId: number, type: string): Promise<UserReward>;
-  getRewardHistory(userId: number): Promise<(UserReward & { reward: Reward })[]>;
+  redeemReward(userId: number, rewardId: number, type: string): Promise<SharedUserReward>;
+  getRewardHistory(userId: number): Promise<(SharedUserReward & { reward: Reward })[]>;
 
   // Surveys
   getSurveys(): Promise<Survey[]>;
@@ -176,7 +177,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(rewards);
   }
 
-  async redeemReward(userId: number, rewardId: number, type: string): Promise<UserReward> {
+  async redeemReward(userId: number, rewardId: number, type: string): Promise<SharedUserReward> {
     const [reward] = await db.select().from(rewards).where(eq(rewards.id, rewardId));
     const user = await this.getUser(userId);
     
@@ -188,7 +189,7 @@ export class DatabaseStorage implements IStorage {
     return redemption;
   }
 
-  async getRewardHistory(userId: number): Promise<(UserReward & { reward: Reward })[]> {
+  async getRewardHistory(userId: number): Promise<(SharedUserReward & { reward: Reward })[]> {
     const history = await db.select().from(userRewards).where(eq(userRewards.userId, userId)).orderBy(desc(userRewards.redeemedAt));
     const results = [];
     for (const h of history) {
