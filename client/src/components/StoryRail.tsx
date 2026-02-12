@@ -1,22 +1,43 @@
-import { useUser } from "@/hooks/use-trendle";
+import { useState } from "react";
+import { useUser, useStories } from "@/hooks/use-trendle";
 import { Plus } from "lucide-react";
+import { StoryModal } from "./StoryModal";
+import { CreateStoryModal } from "./CreateStoryModal";
 
 export function StoryRail() {
   const { data: user } = useUser();
+  const { data: stories = [] } = useStories();
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [openCreateStory, setOpenCreateStory] = useState(false);
 
-  // Mock stories data for visual flair
-  const stories = [
-    { id: 1, name: "Jason", img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&h=150&fit=crop" },
-    { id: 2, name: "Sarah", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop" },
-    { id: 3, name: "Mike", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" },
-    { id: 4, name: "Emma", img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop" },
-    { id: 5, name: "Alex", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" },
-  ];
+  // Group stories by user
+  const userStoriesMap = new Map<number, typeof stories>();
+  stories.forEach((story) => {
+    if (!userStoriesMap.has(story.userId)) {
+      userStoriesMap.set(story.userId, []);
+    }
+    userStoriesMap.get(story.userId)?.push(story);
+  });
+
+  // Get unique users with stories
+  const uniqueUsers = Array.from(userStoriesMap.keys()).map((userId) => {
+    const userStories = userStoriesMap.get(userId)!;
+    return {
+      id: userId,
+      username: userStories[0].user.username,
+      avatar: userStories[0].user.avatar,
+    };
+  });
+
+  console.log('Unique users:', uniqueUsers);
 
   return (
     <div className="w-full overflow-x-auto hide-scrollbar py-4 pl-4 space-x-4 flex items-start">
       {/* My Story Add Button */}
-      <div className="flex flex-col items-center gap-1 min-w-[64px]">
+      <div
+        className="flex flex-col items-center gap-1 min-w-[64px] cursor-pointer"
+        onClick={() => setOpenCreateStory(true)}
+      >
         <div className="relative w-16 h-16 rounded-full p-[2px] border-2 border-dashed border-muted-foreground/30">
           <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
             {user?.avatar && <img src={user.avatar} className="w-full h-full object-cover opacity-50" />}
@@ -31,17 +52,37 @@ export function StoryRail() {
       </div>
 
       {/* Friends Stories */}
-      {stories.map((story) => (
-        <div key={story.id} className="flex flex-col items-center gap-1 min-w-[64px] cursor-pointer group">
-          <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full rounded-full border-2 border-background overflow-hidden">
-               {/* User Avatar from Unsplash */}
-              <img src={story.img} alt={story.name} className="w-full h-full object-cover" />
+      {uniqueUsers.map((storyUser) => (
+        <div
+          key={storyUser.id}
+          className="flex flex-col items-center gap-1 min-w-[64px] cursor-pointer group"
+          onClick={() => {
+            console.log('Clicked on user:', storyUser.id);
+            setSelectedUserId(storyUser.id);
+          }}
+        >
+          <div className="w-16 h-16 rounded-full p-[3px] bg-[#B8A9FF] shadow-lg shadow-[rgba(184,169,255,0.3)] group-hover:scale-105 transition-transform" style={{ boxShadow: '0 0 15px rgba(184,169,255,0.35)' }}>
+            <div className="w-full h-full rounded-full bg-white overflow-hidden">
+              <img
+                src={storyUser.avatar}
+                alt={storyUser.username}
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
-          <span className="text-xs font-medium">{story.name}</span>
+          <span className="text-xs font-medium">{storyUser.username}</span>
         </div>
       ))}
+
+      {/* Story Modal */}
+      {selectedUserId && (
+        <StoryModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
+
+      <CreateStoryModal open={openCreateStory} onOpenChange={setOpenCreateStory} />
     </div>
   );
 }

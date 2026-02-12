@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./mockStorage"; // Using mock storage for development
 import { api } from "@shared/routes";
 import { z } from "zod";
 
@@ -13,6 +13,27 @@ export async function registerRoutes(
   await storage.seed();
 
   // === USERS ===
+  app.get(api.users.me.path, async (req, res) => {
+    // Hardcoded "Me" for mock purposes
+    const me = await storage.getUser(1);
+    res.json(me);
+  });
+
+  app.get(api.users.suggested.path, async (_req, res) => {
+    const users = await storage.getSuggestedUsers(1); // Hardcoded current user ID 1
+    res.json(users);
+  });
+
+  app.get(api.users.pointsHistory.path, async (_req, res) => {
+    const history = await storage.getPointsHistory(1);
+    res.json(history);
+  });
+
+  app.get(api.users.redemptionHistory.path, async (_req, res) => {
+    const history = await storage.getRedemptionHistory(1);
+    res.json(history);
+  });
+
   app.get(api.users.list.path, async (req, res) => {
     const users = await storage.getUsers();
     res.json(users);
@@ -24,11 +45,43 @@ export async function registerRoutes(
     res.json(user);
   });
 
-  app.get(api.users.me.path, async (req, res) => {
-    // Hardcoded "Me" for mock purposes
-    const me = await storage.getUser(1); 
-    res.json(me);
+  app.put(api.users.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const input = api.users.update.input.parse(req.body);
+      const user = await storage.updateUser(id, input as any);
+      res.json(user);
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(404).json({ message: err.message });
+    }
   });
+
+  app.post(api.users.follow.path, async (req, res) => {
+    try {
+      const followingId = Number(req.params.id);
+      const followerId = 1; // Hardcoded me
+      const follow = await storage.createFollow(followerId, followingId);
+      res.json({ success: true, follow });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.post(api.users.unfollow.path, async (req, res) => {
+    try {
+      const followingId = Number(req.params.id);
+      const followerId = 1; // Hardcoded me
+      await storage.unfollowUser(followerId, followingId);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+
 
   // === PLACES ===
   app.get(api.places.list.path, async (req, res) => {
@@ -44,16 +97,19 @@ export async function registerRoutes(
 
   // === POSTS ===
   app.get(api.posts.list.path, async (req, res) => {
-    const { filter, placeId } = req.query;
-    // In a real app we'd use filter to show 'following' only
-    const posts = await storage.getPosts(filter as string, placeId as string);
+    const input = api.posts.list.input.parse({
+      filter: req.query.filter,
+      placeId: req.query.placeId,
+      userId: req.query.userId ? parseInt(req.query.userId as string) : undefined
+    });
+    const posts = await storage.getPosts(input?.filter, input?.placeId, input?.userId);
     res.json(posts);
   });
 
   app.post(api.posts.create.path, async (req, res) => {
     try {
       const input = api.posts.create.input.parse(req.body);
-      const post = await storage.createPost(input);
+      const post = await storage.createPost(input as any);
       res.status(201).json(post);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -67,7 +123,7 @@ export async function registerRoutes(
     try {
       const postId = Number(req.params.id);
       const userId = 1; // Always "Me" for now
-      
+
       const existing = await storage.getLike(userId, postId);
       if (existing) return res.json({ success: true, points: 0 }); // Already liked
 
@@ -119,6 +175,27 @@ export async function registerRoutes(
     res.json(history);
   });
 
+  // === WALLET & CASHOUTS ===
+  app.get(api.wallet.transactions.path, async (req, res) => {
+    const transactions = await storage.getTransactions(1);
+    res.json(transactions);
+  });
+
+  app.get(api.wallet.cashouts.list.path, async (req, res) => {
+    const cashouts = await storage.getCashouts(1);
+    res.json(cashouts);
+  });
+
+  app.post(api.wallet.cashouts.create.path, async (req, res) => {
+    try {
+      const input = api.wallet.cashouts.create.input.parse(req.body);
+      const cashout = await storage.createCashout({ ...input, userId: 1 });
+      res.status(201).json(cashout);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
   // === SURVEYS ===
   app.get(api.surveys.list.path, async (req, res) => {
     const s = await storage.getSurveys();
@@ -158,25 +235,67 @@ export async function registerRoutes(
     res.json(notifs);
   });
 
+  // === STORIES ===
+  app.get(api.stories.list.path, async (req, res) => {
+    const stories = await storage.getStories();
+    res.json(stories);
+  });
+
+  app.get(api.stories.user.path, async (req, res) => {
+    const userId = Number(req.params.userId);
+    const stories = await storage.getStoriesByUser(userId);
+    res.json(stories);
+  });
+
+  app.post(api.stories.create.path, async (req, res) => {
+    try {
+      const input = api.stories.create.input.parse(req.body);
+      const story = await storage.createStory(input);
+      res.status(201).json(story);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
+  // === USERS UPDATE ===
+  app.put(api.users.update.path, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const input = api.users.update.input.parse(req.body);
+
+      // In a real app we would check if req.user.id === id
+      const updatedUser = await storage.updateUser(id, input);
+      res.json(updatedUser);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(404).json({ message: "User not found" });
+    }
+  });
+
   // === SIMULATION (Live Feel) ===
   // Every 15 seconds, inject a random like or comment on a random post
   setInterval(async () => {
     try {
       const allPosts = await storage.getPosts();
       if (allPosts.length === 0) return;
-      
+
       const randomPost = allPosts[Math.floor(Math.random() * allPosts.length)];
       const randomActorId = Math.floor(Math.random() * 4) + 2; // Users 2-5
-      
+
       if (Math.random() > 0.5) {
         // Mock Like
         const existing = await storage.getLike(randomActorId, randomPost.id);
         if (!existing) {
           await storage.createLike({ userId: randomActorId, postId: randomPost.id });
           if (randomPost.userId === 1) {
-            await storage.createNotification({ 
-              userId: 1, type: "like", actorId: randomActorId, 
-              message: "Someone liked your moment!" 
+            await storage.createNotification({
+              userId: 1, type: "like", actorId: randomActorId,
+              message: "Someone liked your moment!"
             });
           }
         }
@@ -186,16 +305,38 @@ export async function registerRoutes(
         const text = texts[Math.floor(Math.random() * texts.length)];
         await storage.createComment({ userId: randomActorId, postId: randomPost.id, text });
         if (randomPost.userId === 1) {
-            await storage.createNotification({ 
-              userId: 1, type: "comment", actorId: randomActorId, 
-              message: "Someone commented on your moment" 
-            });
+          await storage.createNotification({
+            userId: 1, type: "comment", actorId: randomActorId,
+            message: "Someone commented on your moment"
+          });
         }
       }
     } catch (e) {
       console.error("Simulation error", e);
     }
   }, 15000);
+
+  // Cashout Status Simulation
+  setInterval(async () => {
+    try {
+      const cashouts = await storage.getCashouts(1);
+      const pending = cashouts.filter(c => c.status === "pending");
+      if (pending.length > 0) {
+        const target = pending[0];
+        const nextStatus = Math.random() > 0.5 ? "approved" : "paid";
+        await storage.updateCashoutStatus(target.id, nextStatus);
+
+        await storage.createNotification({
+          userId: 1,
+          type: "reward",
+          actorId: 1,
+          message: `Your cashout request for ${target.amount} pts has been ${nextStatus}!`
+        });
+      }
+    } catch (e) {
+      console.error("Cashout simulation error", e);
+    }
+  }, 30000); // Check every 30 seconds
 
   return httpServer;
 }

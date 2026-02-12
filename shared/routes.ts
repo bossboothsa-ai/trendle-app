@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import { 
-  insertUserSchema, 
-  insertPlaceSchema, 
-  insertPostSchema, 
+import {
+  insertUserSchema,
+  insertPlaceSchema,
+  insertPostSchema,
   insertCommentSchema,
   insertRewardSchema,
   insertSurveyResponseSchema,
+  insertStorySchema,
   users,
   places,
   posts,
@@ -15,7 +16,10 @@ import {
   surveys,
   dailyTasks,
   userRewards,
-  userDailyTasks
+  userDailyTasks,
+  pointsHistory,
+  stories,
+  cashouts
 } from './schema';
 
 export const errorSchemas = {
@@ -45,15 +49,62 @@ export const api = {
       method: 'GET' as const,
       path: '/api/users/:id' as const,
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<typeof users.$inferSelect & { hasFollowed: boolean }>(),
         404: errorSchemas.notFound,
       },
+    },
+    suggested: {
+      method: 'GET' as const,
+      path: '/api/users/suggested' as const,
+      responses: {
+        200: z.array(z.custom<typeof users.$inferSelect>()),
+      }
+    },
+    pointsHistory: {
+      method: 'GET' as const,
+      path: '/api/users/me/points-history' as const,
+      responses: {
+        200: z.array(z.custom<typeof pointsHistory.$inferSelect>()),
+      }
+    },
+    redemptionHistory: {
+      method: 'GET' as const,
+      path: '/api/users/me/redemptions' as const,
+      responses: {
+        200: z.array(z.custom<typeof userRewards.$inferSelect & { reward: typeof rewards.$inferSelect }>()),
+      }
+    },
+    follow: {
+      method: 'POST' as const,
+      path: '/api/users/follow/:id' as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        404: errorSchemas.notFound,
+      }
+    },
+    unfollow: {
+      method: 'POST' as const,
+      path: '/api/users/unfollow/:id' as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        404: errorSchemas.notFound,
+      }
     },
     me: { // For the current "mock" logged in user
       method: 'GET' as const,
       path: '/api/me' as const,
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<typeof users.$inferSelect & { hasFollowed: boolean }>(),
+      }
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/users/:id' as const,
+      input: insertUserSchema.partial(),
+      responses: {
+        200: z.custom<typeof users.$inferSelect & { hasFollowed: boolean }>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
       }
     }
   },
@@ -83,11 +134,17 @@ export const api = {
       method: 'GET' as const,
       path: '/api/posts' as const,
       input: z.object({
-        filter: z.enum(['all', 'following']).optional(),
-        placeId: z.string().optional()
+        filter: z.enum(['all', 'following', 'foryou']).optional(),
+        placeId: z.string().optional(),
+        userId: z.number().optional()
       }).optional(),
       responses: {
-        200: z.array(z.custom<typeof posts.$inferSelect & { author: typeof users.$inferSelect, place: typeof places.$inferSelect | null, hasLiked: boolean }>()),
+        200: z.array(z.custom<typeof posts.$inferSelect & {
+          author: typeof users.$inferSelect,
+          place: typeof places.$inferSelect | null,
+          hasLiked: boolean,
+          hasFollowed: boolean
+        }>()),
       },
     },
     create: {
@@ -203,6 +260,66 @@ export const api = {
       responses: {
         200: z.array(z.custom<typeof notifications.$inferSelect>()),
       },
+    }
+  },
+
+  // === STORIES ===
+  stories: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/stories' as const,
+      responses: {
+        200: z.array(z.custom<typeof stories.$inferSelect & { user: typeof users.$inferSelect }>()),
+      },
+    },
+    user: {
+      method: 'GET' as const,
+      path: '/api/stories/user/:userId' as const,
+      responses: {
+        200: z.array(z.custom<typeof stories.$inferSelect & { user: typeof users.$inferSelect }>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/stories' as const,
+      input: insertStorySchema,
+      responses: {
+        201: z.custom<typeof stories.$inferSelect>(),
+        400: errorSchemas.validation,
+      }
+    }
+  },
+
+  // === WALLET & CASHOUTS ===
+  wallet: {
+    transactions: {
+      method: 'GET' as const,
+      path: '/api/wallet/transactions' as const,
+      responses: {
+        200: z.array(z.any()), // [id, type, amount, description, status, date]
+      }
+    },
+    cashouts: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/wallet/cashouts' as const,
+        responses: {
+          200: z.array(z.custom<typeof cashouts.$inferSelect>()),
+        }
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/wallet/cashouts' as const,
+        input: z.object({
+          amount: z.number(),
+          type: z.enum(['bank', 'mobile', 'airtime']),
+          details: z.any()
+        }),
+        responses: {
+          201: z.custom<typeof cashouts.$inferSelect>(),
+          400: z.object({ message: z.string() }),
+        }
+      }
     }
   }
 };

@@ -8,10 +8,45 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  displayName: text("display_name"),
+  email: text("email"),
   avatar: text("avatar").notNull(), // URL to avatar image
   level: text("level").default("Silver").notNull(), // Silver, Gold, Platinum
   points: integer("points").default(0).notNull(),
   bio: text("bio"),
+  location: text("location"),
+  interests: jsonb("interests").$type<string[]>().default([]).notNull(), // e.g., ["coffee", "hiking"]
+  isPrivate: boolean("is_private").default(false).notNull(),
+  notificationSettings: jsonb("notification_settings").$type<{
+    likes: boolean;
+    comments: boolean;
+    follows: boolean;
+    rewards: boolean;
+    places: boolean;
+  }>().default({
+    likes: true,
+    comments: true,
+    follows: true,
+    rewards: true,
+    places: true,
+  }).notNull(),
+  privacySettings: jsonb("privacy_settings").$type<{
+    showPoints: boolean;
+    canSeeMoments: "everyone" | "followers" | "none";
+    canComment: "everyone" | "followers" | "none";
+  }>().default({
+    showPoints: true,
+    canSeeMoments: "everyone",
+    canComment: "everyone",
+  }).notNull(),
+});
+
+export const pointsHistory = pgTable("points_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  amount: integer("amount").notNull(),
+  reason: text("reason").notNull(), // e.g., "Daily Check-in", "Post Liked"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const places = pgTable("places", {
@@ -24,14 +59,23 @@ export const places = pgTable("places", {
   pointsPerVisit: integer("points_per_visit").default(50).notNull(),
   activeOffers: integer("active_offers").default(1).notNull(),
   category: text("category").default("General"), // Coffee, Nightlife, etc.
+  tags: jsonb("tags").$type<string[]>().default([]).notNull(), // e.g., ["wifi", "quiet"]
+  gallery: jsonb("gallery").$type<string[]>().default([]).notNull(), // Additional images
 });
+
+export interface MediaItem {
+  type: "image" | "video";
+  url: string;
+  thumbnail?: string;
+}
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   placeId: integer("place_id"), // Optional check-in
-  image: text("image").notNull(),
+  media: jsonb("media").$type<MediaItem[]>().notNull(), // Array of { type: 'image'|'video', url: string }
   caption: text("caption"),
+  tags: jsonb("tags").$type<string[]>().default([]).notNull(), // e.g., ["summer", "vibes"]
   likesCount: integer("likes_count").default(0).notNull(),
   commentsCount: integer("comments_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -64,6 +108,7 @@ export const rewards = pgTable("rewards", {
   image: text("image").notNull(),
   cost: integer("cost").notNull(),
   locked: boolean("locked").default(true).notNull(),
+  category: text("category").default("product").notNull(), // discount, product, experience, airtime, cashout
 });
 
 export const userRewards = pgTable("user_rewards", {
@@ -72,7 +117,23 @@ export const userRewards = pgTable("user_rewards", {
   rewardId: integer("reward_id").notNull(),
   status: text("status").default("pending").notNull(), // pending, paid, settled
   type: text("type").notNull(), // airtime, voucher, discount
+  code: text("code"),
+  qrCode: text("qr_code"),
+  isUsed: boolean("is_used").default(false).notNull(),
+  expiryDate: timestamp("expiry_date"),
   redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
+});
+
+export const cashouts = pgTable("cashouts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  amount: integer("amount").notNull(), // in points
+  status: text("status").default("pending").notNull(), // pending, approved, paid, rejected
+  type: text("type").notNull(), // bank, mobile, airtime
+  details: jsonb("details").notNull(), // payout info
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const surveys = pgTable("surveys", {
@@ -116,6 +177,54 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const stories = pgTable("stories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  media: jsonb("media").$type<MediaItem[]>().notNull(), // { type: 'image'|'video', url: string }
+  caption: text("caption"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Define manual Zod schemas for JSONB fields to help Drizzle-Zod
+const mediaItemSchema = z.object({
+  type: z.enum(["image", "video"]),
+  url: z.string(),
+  thumbnail: z.string().optional(),
+});
+
+export const insertUserSchema = createInsertSchema(users, {
+  interests: z.array(z.string()),
+  notificationSettings: z.any(),
+  privacySettings: z.any(),
+}).omit({ id: true, points: true, level: true });
+
+export const insertPlaceSchema = createInsertSchema(places, {
+  tags: z.array(z.string()),
+  gallery: z.array(z.string()),
+}).omit({ id: true });
+
+export const insertPostSchema = createInsertSchema(posts, {
+  media: z.array(mediaItemSchema),
+  tags: z.array(z.string()),
+}).omit({ id: true, createdAt: true, likesCount: true, commentsCount: true });
+
+export const insertStorySchema = createInsertSchema(stories, {
+  media: z.array(mediaItemSchema),
+}).omit({ id: true, createdAt: true });
+
+export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
+export const insertLikeSchema = createInsertSchema(likes).omit({ id: true });
+export const insertFollowSchema = createInsertSchema(follows).omit({ id: true });
+export const insertRewardSchema = createInsertSchema(rewards).omit({ id: true });
+export const insertSurveySchema = createInsertSchema(surveys).omit({ id: true });
+export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, createdAt: true });
+export const insertDailyTaskSchema = createInsertSchema(dailyTasks).omit({ id: true });
+
+export const insertPointsHistorySchema = createInsertSchema(pointsHistory).omit({ id: true, createdAt: true });
+export const insertCashoutSchema = createInsertSchema(cashouts).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type Story = typeof stories.$inferSelect;
+
 // === RELATIONS ===
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -128,6 +237,15 @@ export const usersRelations = relations(users, ({ many }) => ({
   notifications: many(notifications),
   surveyResponses: many(surveyResponses),
   dailyTasks: many(userDailyTasks),
+  pointsHistory: many(pointsHistory),
+  cashouts: many(cashouts),
+}));
+
+export const pointsHistoryRelations = relations(pointsHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [pointsHistory.userId],
+    references: [users.id],
+  }),
 }));
 
 export const placesRelations = relations(places, ({ many }) => ({
@@ -202,20 +320,17 @@ export const userDailyTasksRelations = relations(userDailyTasks, ({ one }) => ({
   }),
 }));
 
+export const storiesRelations = relations(stories, ({ one }) => ({
+  user: one(users, {
+    fields: [stories.userId],
+    references: [users.id],
+  }),
+}));
+
 // === INFER TYPES ===
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, points: true, level: true });
-export const insertPlaceSchema = createInsertSchema(places).omit({ id: true });
-export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true, likesCount: true, commentsCount: true });
-export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
-export const insertLikeSchema = createInsertSchema(likes).omit({ id: true });
-export const insertFollowSchema = createInsertSchema(follows).omit({ id: true });
-export const insertRewardSchema = createInsertSchema(rewards).omit({ id: true });
-export const insertSurveySchema = createInsertSchema(surveys).omit({ id: true });
-export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, createdAt: true });
-export const insertDailyTaskSchema = createInsertSchema(dailyTasks).omit({ id: true });
-
 export type User = typeof users.$inferSelect;
+export type PointsHistory = typeof pointsHistory.$inferSelect;
 export type Place = typeof places.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
@@ -228,3 +343,4 @@ export type Survey = typeof surveys.$inferSelect;
 export type SurveyResponse = typeof surveyResponses.$inferSelect;
 export type DailyTask = typeof dailyTasks.$inferSelect;
 export type UserDailyTask = typeof userDailyTasks.$inferSelect;
+export type Cashout = typeof cashouts.$inferSelect;

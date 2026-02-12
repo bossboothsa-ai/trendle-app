@@ -22,6 +22,10 @@ export function useUser(id?: number) {
   });
 }
 
+export function useCurrentUser() {
+  return useUser();
+}
+
 // ============================================
 // PLACES (EXPLORE)
 // ============================================
@@ -54,21 +58,79 @@ export function usePlace(id: number) {
 // POSTS (FEED)
 // ============================================
 
-export function usePosts(filter?: 'all' | 'following', placeId?: string) {
+export function usePosts(filter?: 'all' | 'following' | 'foryou', placeId?: string, userId?: number) {
   return useQuery({
-    queryKey: [api.posts.list.path, { filter, placeId }],
+    queryKey: [api.posts.list.path, { filter, placeId, userId }],
     queryFn: async () => {
       // Build query params
       const params = new URLSearchParams();
       if (filter) params.append("filter", filter);
       if (placeId) params.append("placeId", placeId);
-      
+      if (userId) params.append("userId", userId.toString());
+
       const url = `${api.posts.list.path}?${params.toString()}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch posts");
       return api.posts.list.responses[200].parse(await res.json());
     },
     refetchInterval: 15000, // Polling for simulated realtime activity
+  });
+}
+
+export function useSuggestedUsers() {
+  return useQuery({
+    queryKey: [api.users.suggested.path],
+    queryFn: async () => {
+      const res = await fetch(api.users.suggested.path);
+      if (!res.ok) throw new Error("Failed to fetch suggested users");
+      return api.users.suggested.responses[200].parse(await res.json());
+    }
+  });
+}
+
+export function useFollowUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (userId: number) => {
+      const url = buildUrl(api.users.follow.path, { id: userId });
+      const res = await fetch(url, { method: api.users.follow.method });
+      if (!res.ok) throw new Error("Failed to follow user");
+      return api.users.follow.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.users.suggested.path] });
+      queryClient.invalidateQueries({ queryKey: [api.posts.list.path] });
+      toast({
+        title: "Following",
+        description: "You've successfully followed this user.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+  });
+}
+
+export function useUnfollowUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (userId: number) => {
+      const url = buildUrl(api.users.unfollow.path, { id: userId });
+      const res = await fetch(url, { method: api.users.unfollow.method });
+      if (!res.ok) throw new Error("Failed to unfollow user");
+      return api.users.unfollow.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.users.suggested.path] });
+      queryClient.invalidateQueries({ queryKey: [api.posts.list.path] });
+      toast({
+        title: "Unfollowed",
+        description: "You've stopped following this user.",
+        className: "bg-secondary text-white border-none",
+      });
+    },
   });
 }
 
@@ -193,5 +255,337 @@ export function useNotifications() {
       return api.notifications.list.responses[200].parse(await res.json());
     },
     refetchInterval: 10000,
+  });
+}
+
+// ============================================
+// COMMENTS
+// ============================================
+
+export function useComments(postId: number) {
+  return useQuery({
+    queryKey: [api.comments.list.path, postId],
+    queryFn: async () => {
+      const url = buildUrl(api.comments.list.path, { postId });
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch comments");
+      return api.comments.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useCreateComment() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ postId, text }: { postId: number; text: string }) => {
+      const url = buildUrl(api.comments.create.path, { postId });
+      const res = await fetch(url, {
+        method: api.comments.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error("Failed to create comment");
+      return api.comments.create.responses[201].parse(await res.json());
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.comments.list.path, variables.postId] });
+      queryClient.invalidateQueries({ queryKey: [api.posts.list.path] });
+      toast({
+        title: "Comment posted!",
+        description: "Your comment has been added.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not post your comment.",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// ============================================
+// SURVEYS
+// ============================================
+
+export function useSurveys() {
+  return useQuery({
+    queryKey: [api.surveys.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.surveys.list.path);
+      if (!res.ok) throw new Error("Failed to fetch surveys");
+      return api.surveys.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useSubmitSurvey() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, answers }: { id: number; answers: any }) => {
+      const url = buildUrl(api.surveys.submit.path, { id });
+      const res = await fetch(url, {
+        method: api.surveys.submit.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to submit survey");
+      }
+      return api.surveys.submit.responses[200].parse(await res.json());
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [api.surveys.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      toast({
+        title: `+${data.points} Points!`,
+        description: "Survey completed successfully!",
+        className: "bg-accent text-white border-none font-bold",
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// ============================================
+// DAILY TASKS
+// ============================================
+
+export function useDailyTasks() {
+  return useQuery({
+    queryKey: [api.dailyTasks.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.dailyTasks.list.path);
+      if (!res.ok) throw new Error("Failed to fetch daily tasks");
+      return api.dailyTasks.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useCompleteDailyTask() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (taskId: number) => {
+      const url = buildUrl(api.dailyTasks.complete.path, { id: taskId });
+      const res = await fetch(url, { method: api.dailyTasks.complete.method });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to complete task");
+      }
+      return api.dailyTasks.complete.responses[200].parse(await res.json());
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [api.dailyTasks.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      toast({
+        title: `+${data.points} Points!`,
+        description: "Task completed!",
+        className: "bg-accent text-white border-none font-bold",
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// ============================================
+// STORIES
+// ============================================
+
+export function useStories() {
+  return useQuery({
+    queryKey: [api.stories.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.stories.list.path);
+      if (!res.ok) throw new Error("Failed to fetch stories");
+      return api.stories.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useUserStories(userId: number) {
+  return useQuery({
+    queryKey: [api.stories.user.path, userId],
+    queryFn: async () => {
+      const url = buildUrl(api.stories.user.path, { userId });
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch user stories");
+      return api.stories.user.responses[200].parse(await res.json());
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useCreateStory() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch(api.stories.create.path, {
+        method: api.stories.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create story");
+      return api.stories.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.stories.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.stories.user.path] });
+      toast({
+        title: "Story Added",
+        description: "Your story is now live.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not add story.",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const url = buildUrl(api.users.update.path, { id });
+      const res = await fetch(url, {
+        method: api.users.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update profile");
+      return api.users.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      queryClient.invalidateQueries({ queryKey: [api.users.get.path] });
+      toast({
+        title: "Profile Updated",
+        description: "Your changes have been saved.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+export function usePointsHistory() {
+  return useQuery({
+    queryKey: [api.users.pointsHistory.path],
+    queryFn: async () => {
+      const res = await fetch(api.users.pointsHistory.path);
+      if (!res.ok) throw new Error("Failed to fetch points history");
+      return api.users.pointsHistory.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useRedemptionHistory() {
+  return useQuery({
+    queryKey: [api.users.redemptionHistory.path],
+    queryFn: async () => {
+      const res = await fetch(api.users.redemptionHistory.path);
+      if (!res.ok) throw new Error("Failed to fetch redemption history");
+      return api.users.redemptionHistory.responses[200].parse(await res.json());
+    },
+  });
+}
+
+// ============================================
+// WALLET & CASHOUTS
+// ============================================
+
+export function useTransactions() {
+  return useQuery({
+    queryKey: [api.wallet.transactions.path],
+    queryFn: async () => {
+      const res = await fetch(api.wallet.transactions.path);
+      if (!res.ok) throw new Error("Failed to fetch transactions");
+      return api.wallet.transactions.responses[200].parse(await res.json());
+    },
+    refetchInterval: 10000,
+  });
+}
+
+export function useCashouts() {
+  return useQuery({
+    queryKey: [api.wallet.cashouts.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.wallet.cashouts.list.path);
+      if (!res.ok) throw new Error("Failed to fetch cashouts");
+      return api.wallet.cashouts.list.responses[200].parse(await res.json());
+    },
+    refetchInterval: 15000,
+  });
+}
+
+export function useRequestCashout() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: { amount: number; type: 'bank' | 'mobile' | 'airtime'; details: any }) => {
+      const res = await fetch(api.wallet.cashouts.create.path, {
+        method: api.wallet.cashouts.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to request cashout");
+      }
+      return api.wallet.cashouts.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.wallet.cashouts.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.wallet.transactions.path] });
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      toast({
+        title: "Cashout Requested",
+        description: "Your payout is being processed.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Cashout Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
   });
 }

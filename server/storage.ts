@@ -21,7 +21,7 @@ export interface IStorage {
   createPlace(place: Partial<Place>): Promise<Place>;
 
   // Posts
-  getPosts(filter?: string, placeId?: string): Promise<(Post & { author: User, place: Place | null, hasLiked: boolean })[]>; // Simplified return type for now
+  getPosts(filter?: string, placeId?: string): Promise<(Post & { author: User, place: Place | null, hasLiked: boolean, hasFollowed: boolean })[]>; // Simplified return type for now
   createPost(post: Partial<Post>): Promise<Post>;
   getPost(id: number): Promise<Post | undefined>;
 
@@ -30,7 +30,10 @@ export interface IStorage {
   getLike(userId: number, postId: number): Promise<Like | undefined>;
   createComment(comment: Partial<Comment>): Promise<Comment>;
   getComments(postId: number): Promise<(Comment & { author: User })[]>;
-  
+  createFollow(followerId: number, followingId: number): Promise<Follow>;
+  unfollowUser(followerId: number, followingId: number): Promise<void>;
+  getFollow(followerId: number, followingId: number): Promise<Follow | undefined>;
+
   // Rewards
   getRewards(): Promise<Reward[]>;
   redeemReward(userId: number, rewardId: number, type: string): Promise<SharedUserReward>;
@@ -69,7 +72,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPoints(id: number, points: number): Promise<User> {
     const [updated] = await db.update(users)
-      .set({ 
+      .set({
         points: points,
         level: points >= 1500 ? "Platinum" : points >= 500 ? "Gold" : "Silver"
       })
@@ -92,30 +95,34 @@ export class DatabaseStorage implements IStorage {
     return newPlace;
   }
 
-  async getPosts(filter?: string, placeId?: string): Promise<(Post & { author: User, place: Place | null, hasLiked: boolean })[]> {
+  async getPosts(filter?: string, placeId?: string): Promise<(Post & { author: User, place: Place | null, hasLiked: boolean, hasFollowed: boolean })[]> {
     const conditions = [];
     if (placeId) conditions.push(eq(posts.placeId, parseInt(placeId)));
-    
+
     // Note: This is a simplified fetch. In a real app we'd join properly.
     // For this mock, we'll fetch all and map.
     const allPosts = await db.select().from(posts)
       .where(and(...conditions))
       .orderBy(desc(posts.createdAt));
-      
+
     const results = [];
     for (const p of allPosts) {
       const [author] = await db.select().from(users).where(eq(users.id, p.userId));
       const [place] = p.placeId ? await db.select().from(places).where(eq(places.id, p.placeId)) : [undefined];
-      
+
       // Check if "me" (User 1) liked it
       const [like] = await db.select().from(likes).where(and(eq(likes.postId, p.id), eq(likes.userId, 1)));
+
+      // Check if "me" follows the author
+      const [follow] = await db.select().from(follows).where(and(eq(follows.followerId, 1), eq(follows.followingId, p.userId)));
 
       if (author) {
         results.push({
           ...p,
           author,
           place: place || null,
-          hasLiked: !!like
+          hasLiked: !!like,
+          hasFollowed: !!follow
         });
       }
     }
@@ -164,13 +171,27 @@ export class DatabaseStorage implements IStorage {
     const comms = await db.select().from(comments)
       .where(eq(comments.postId, postId))
       .orderBy(desc(comments.createdAt));
-      
+
     const results = [];
     for (const c of comms) {
       const [author] = await db.select().from(users).where(eq(users.id, c.userId));
       if (author) results.push({ ...c, author });
     }
     return results;
+  }
+
+  async createFollow(followerId: number, followingId: number): Promise<Follow> {
+    const [newFollow] = await db.insert(follows).values({ followerId, followingId }).returning();
+    return newFollow;
+  }
+
+  async unfollowUser(followerId: number, followingId: number): Promise<void> {
+    await db.delete(follows).where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)));
+  }
+
+  async getFollow(followerId: number, followingId: number): Promise<Follow | undefined> {
+    const [follow] = await db.select().from(follows).where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)));
+    return follow;
   }
 
   async getRewards(): Promise<Reward[]> {
@@ -180,7 +201,7 @@ export class DatabaseStorage implements IStorage {
   async redeemReward(userId: number, rewardId: number, type: string): Promise<SharedUserReward> {
     const [reward] = await db.select().from(rewards).where(eq(rewards.id, rewardId));
     const user = await this.getUser(userId);
-    
+
     if (!reward || !user) throw new Error("Invalid reward or user");
     if (user.points < reward.cost) throw new Error("Not enough points");
 
@@ -206,7 +227,7 @@ export class DatabaseStorage implements IStorage {
   async submitSurveyResponse(userId: number, surveyId: number, answers: any): Promise<SurveyResponse> {
     const [survey] = await db.select().from(surveys).where(eq(surveys.id, surveyId));
     if (!survey) throw new Error("Survey not found");
-    
+
     const [response] = await db.insert(surveyResponses).values({ userId, surveyId, answers }).returning();
     const user = await this.getUser(userId);
     if (user) await this.updateUserPoints(userId, user.points + survey.points);
@@ -226,7 +247,7 @@ export class DatabaseStorage implements IStorage {
   async completeDailyTask(userId: number, taskId: number): Promise<UserDailyTask> {
     const [task] = await db.select().from(dailyTasks).where(eq(dailyTasks.id, taskId));
     if (!task) throw new Error("Task not found");
-    
+
     const [comp] = await db.insert(userDailyTasks).values({ userId, taskId }).returning();
     const user = await this.getUser(userId);
     if (user) await this.updateUserPoints(userId, user.points + task.points);
@@ -288,9 +309,9 @@ export class DatabaseStorage implements IStorage {
       { title: "Cocktail Discount", description: "50% off your first drink", cost: 1000, image: "https://images.unsplash.com/photo-1514362545857-3bc16549766b?w=200", locked: true },
       { title: "R100 Voucher", description: "Spend at any partner venue", cost: 2500, image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=200", locked: true }
     ];
-    
+
     for (const r of rewardsData) {
-       await db.insert(rewards).values(r);
+      await db.insert(rewards).values(r);
     }
 
     // 5. Surveys & Tasks
