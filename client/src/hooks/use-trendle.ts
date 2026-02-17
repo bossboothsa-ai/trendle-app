@@ -66,12 +66,13 @@ export function usePlaces() {
 }
 
 export function usePlace(id: number) {
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.places.get.path, id],
     queryFn: async () => {
+      if (isDemoMode) return DEMO_BUSINESSES.find(b => b.id === id) || DEMO_BUSINESSES[0];
       const url = buildUrl(api.places.get.path, { id });
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch place");
+      const res = await apiRequest("GET", url);
       return api.places.get.responses[200].parse(await res.json());
     },
     enabled: !!id,
@@ -123,8 +124,7 @@ export function useFollowUser() {
   return useMutation({
     mutationFn: async (userId: number) => {
       const url = buildUrl(api.users.follow.path, { id: userId });
-      const res = await fetch(url, { method: api.users.follow.method });
-      if (!res.ok) throw new Error("Failed to follow user");
+      const res = await apiRequest(api.users.follow.method, url);
       return api.users.follow.responses[200].parse(await res.json());
     },
     onSuccess: () => {
@@ -146,8 +146,7 @@ export function useUnfollowUser() {
   return useMutation({
     mutationFn: async (userId: number) => {
       const url = buildUrl(api.users.unfollow.path, { id: userId });
-      const res = await fetch(url, { method: api.users.unfollow.method });
-      if (!res.ok) throw new Error("Failed to unfollow user");
+      const res = await apiRequest(api.users.unfollow.method, url);
       return api.users.unfollow.responses[200].parse(await res.json());
     },
     onSuccess: () => {
@@ -169,12 +168,7 @@ export function useCreatePost() {
     mutationFn: async (data: any) => {
       // data should match insertPostSchema
       const validated = api.posts.create.input.parse(data);
-      const res = await fetch(api.posts.create.path, {
-        method: api.posts.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(validated),
-      });
-      if (!res.ok) throw new Error("Failed to create post");
+      const res = await apiRequest(api.posts.create.method, api.posts.create.path, validated);
       return api.posts.create.responses[201].parse(await res.json());
     },
     onSuccess: () => {
@@ -202,12 +196,7 @@ export function useUpdatePost() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const url = buildUrl(api.posts.update.path, { id });
-      const res = await fetch(url, {
-        method: api.posts.update.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to update post");
+      const res = await apiRequest(api.posts.update.method, url, data);
       return api.posts.update.responses[200].parse(await res.json());
     },
     onSuccess: () => {
@@ -231,8 +220,7 @@ export function useDeletePost() {
   return useMutation({
     mutationFn: async (id: number) => {
       const url = buildUrl(api.posts.delete.path, { id });
-      const res = await fetch(url, { method: api.posts.delete.method });
-      if (!res.ok) throw new Error("Failed to delete post");
+      await apiRequest(api.posts.delete.method, url);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.posts.list.path] });
@@ -255,8 +243,7 @@ export function useLikePost() {
   return useMutation({
     mutationFn: async (postId: number) => {
       const url = buildUrl(api.posts.like.path, { id: postId });
-      const res = await fetch(url, { method: api.posts.like.method });
-      if (!res.ok) throw new Error("Failed to like post");
+      const res = await apiRequest(api.posts.like.method, url);
       return api.posts.like.responses[200].parse(await res.json());
     },
     onSuccess: (data) => {
@@ -297,11 +284,7 @@ export function useRedeemReward() {
   return useMutation({
     mutationFn: async (rewardId: number) => {
       const url = buildUrl(api.rewards.redeem.path, { id: rewardId });
-      const res = await fetch(url, { method: api.rewards.redeem.method });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to redeem");
-      }
+      const res = await apiRequest(api.rewards.redeem.method, url);
       return api.rewards.redeem.responses[200].parse(await res.json());
     },
     onSuccess: () => {
@@ -331,8 +314,7 @@ export function useNotifications() {
   return useQuery({
     queryKey: [api.notifications.list.path],
     queryFn: async () => {
-      const res = await fetch(api.notifications.list.path);
-      if (!res.ok) throw new Error("Failed to fetch notifications");
+      const res = await apiRequest("GET", api.notifications.list.path);
       return api.notifications.list.responses[200].parse(await res.json());
     },
     refetchInterval: 10000,
@@ -348,8 +330,7 @@ export function useComments(postId: number) {
     queryKey: [api.comments.list.path, postId],
     queryFn: async () => {
       const url = buildUrl(api.comments.list.path, { postId });
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch comments");
+      const res = await apiRequest("GET", url);
       return api.comments.list.responses[200].parse(await res.json());
     },
   });
@@ -362,12 +343,7 @@ export function useCreateComment() {
   return useMutation({
     mutationFn: async ({ postId, text }: { postId: number; text: string }) => {
       const url = buildUrl(api.comments.create.path, { postId });
-      const res = await fetch(url, {
-        method: api.comments.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) throw new Error("Failed to create comment");
+      const res = await apiRequest(api.comments.create.method, url, { text });
       return api.comments.create.responses[201].parse(await res.json());
     },
     onSuccess: (_, variables) => {
@@ -412,15 +388,7 @@ export function useSubmitSurvey() {
   return useMutation({
     mutationFn: async ({ id, answers }: { id: number; answers: any }) => {
       const url = buildUrl(api.surveys.submit.path, { id });
-      const res = await fetch(url, {
-        method: api.surveys.submit.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to submit survey");
-      }
+      const res = await apiRequest(api.surveys.submit.method, url, { answers });
       return api.surveys.submit.responses[200].parse(await res.json());
     },
     onSuccess: (data) => {
@@ -450,41 +418,7 @@ export function useDailyTasks() {
   return useQuery({
     queryKey: [api.dailyTasks.list.path],
     queryFn: async () => {
-      // DEV MODE MOCK
-      if (process.env.NODE_ENV === "development") {
-        return [
-          {
-            id: 1,
-            title: "Coffee Check-in",
-            description: "Check in at a Coffee Shop",
-            points: 50,
-            completed: false,
-            type: "checkin",
-            placeId: null,
-            active: true,
-            startDate: null,
-            endDate: null,
-            maxParticipants: null,
-            verificationMethod: "QR Verified"
-          },
-          {
-            id: 2,
-            title: "Share Moment",
-            description: "Post a Moment",
-            points: 40,
-            completed: true,
-            type: "post",
-            placeId: null,
-            active: true,
-            startDate: null,
-            endDate: null,
-            maxParticipants: null,
-            verificationMethod: "QR Verified"
-          }
-        ];
-      }
-      const res = await fetch(api.dailyTasks.list.path);
-      if (!res.ok) throw new Error("Failed to fetch daily tasks");
+      const res = await apiRequest("GET", api.dailyTasks.list.path);
       return api.dailyTasks.list.responses[200].parse(await res.json());
     },
   });
@@ -497,11 +431,7 @@ export function useCompleteDailyTask() {
   return useMutation({
     mutationFn: async (taskId: number) => {
       const url = buildUrl(api.dailyTasks.complete.path, { id: taskId });
-      const res = await fetch(url, { method: api.dailyTasks.complete.method });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to complete task");
-      }
+      const res = await apiRequest(api.dailyTasks.complete.method, url);
       return api.dailyTasks.complete.responses[200].parse(await res.json());
     },
     onSuccess: (data) => {
@@ -531,21 +461,7 @@ export function useStories() {
   return useQuery({
     queryKey: [api.stories.list.path],
     queryFn: async () => {
-      // DEV MODE MOCK
-      if (process.env.NODE_ENV === "development") {
-        return [
-          {
-            id: 1,
-            userId: 1,
-            user: DEV_USER,
-            media: [{ type: 'image', url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80" }],
-            createdAt: new Date().toISOString(),
-            caption: "My story caption"
-          }
-        ];
-      }
-      const res = await fetch(api.stories.list.path);
-      if (!res.ok) throw new Error("Failed to fetch stories");
+      const res = await apiRequest("GET", api.stories.list.path);
       return api.stories.list.responses[200].parse(await res.json());
     },
   });
@@ -556,8 +472,7 @@ export function useUserStories(userId: number) {
     queryKey: [api.stories.user.path, userId],
     queryFn: async () => {
       const url = buildUrl(api.stories.user.path, { userId });
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch user stories");
+      const res = await apiRequest("GET", url);
       return api.stories.user.responses[200].parse(await res.json());
     },
     enabled: !!userId,
@@ -572,12 +487,7 @@ export function useCreateStory() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch(api.stories.create.path, {
-        method: api.stories.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to create story");
+      const res = await apiRequest(api.stories.create.method, api.stories.create.path, data);
       return api.stories.create.responses[201].parse(await res.json());
     },
     onSuccess: () => {
@@ -606,12 +516,7 @@ export function useUpdateUser() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const url = buildUrl(api.users.update.path, { id });
-      const res = await fetch(url, {
-        method: api.users.update.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to update profile");
+      const res = await apiRequest(api.users.update.method, url, data);
       return api.users.update.responses[200].parse(await res.json());
     },
     onSuccess: () => {
@@ -637,15 +542,7 @@ export function usePointsHistory() {
   return useQuery({
     queryKey: [api.users.pointsHistory.path],
     queryFn: async () => {
-      // DEV MODE MOCK
-      if (process.env.NODE_ENV === "development") {
-        return [
-          { id: 1, userId: 1, amount: 50, reason: "Check-in at Truth Coffee", createdAt: new Date().toISOString() },
-          { id: 2, userId: 1, amount: 10, reason: "Daily login", createdAt: new Date(Date.now() - 86400000).toISOString() }
-        ];
-      }
-      const res = await fetch(api.users.pointsHistory.path);
-      if (!res.ok) throw new Error("Failed to fetch points history");
+      const res = await apiRequest("GET", api.users.pointsHistory.path);
       return api.users.pointsHistory.responses[200].parse(await res.json());
     },
   });
@@ -655,21 +552,7 @@ export function useRedemptionHistory() {
   return useQuery({
     queryKey: [api.users.redemptionHistory.path],
     queryFn: async () => {
-      // DEV MODE MOCK
-      if (process.env.NODE_ENV === "development") {
-        return [
-          {
-            id: 1,
-            userId: 1,
-            rewardId: 1,
-            pointsCost: 500,
-            redeemedAt: new Date().toISOString(),
-            reward: { title: "Test Reward", description: "Free Coffee" }
-          }
-        ];
-      }
-      const res = await fetch(api.users.redemptionHistory.path);
-      if (!res.ok) throw new Error("Failed to fetch redemption history");
+      const res = await apiRequest("GET", api.users.redemptionHistory.path);
       return api.users.redemptionHistory.responses[200].parse(await res.json());
     },
   });
@@ -683,8 +566,7 @@ export function useTransactions() {
   return useQuery({
     queryKey: [api.wallet.transactions.path],
     queryFn: async () => {
-      const res = await fetch(api.wallet.transactions.path);
-      if (!res.ok) throw new Error("Failed to fetch transactions");
+      const res = await apiRequest("GET", api.wallet.transactions.path);
       return api.wallet.transactions.responses[200].parse(await res.json());
     },
     refetchInterval: 10000,
@@ -695,8 +577,7 @@ export function useCashouts() {
   return useQuery({
     queryKey: [api.wallet.cashouts.list.path],
     queryFn: async () => {
-      const res = await fetch(api.wallet.cashouts.list.path);
-      if (!res.ok) throw new Error("Failed to fetch cashouts");
+      const res = await apiRequest("GET", api.wallet.cashouts.list.path);
       return api.wallet.cashouts.list.responses[200].parse(await res.json());
     },
     refetchInterval: 15000,
@@ -709,15 +590,7 @@ export function useRequestCashout() {
 
   return useMutation({
     mutationFn: async (data: { amount: number; type: 'bank' | 'mobile' | 'airtime'; details: any }) => {
-      const res = await fetch(api.wallet.cashouts.create.path, {
-        method: api.wallet.cashouts.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to request cashout");
-      }
+      const res = await apiRequest(api.wallet.cashouts.create.method, api.wallet.cashouts.create.path, data);
       return api.wallet.cashouts.create.responses[201].parse(await res.json());
     },
     onSuccess: () => {

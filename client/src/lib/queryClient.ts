@@ -7,7 +7,15 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-import { DEMO_USERS, DEMO_BUSINESSES, DEMO_POSTS, DEMO_NOTIFICATIONS } from "./demo-data";
+import {
+  DEMO_USERS,
+  DEMO_BUSINESSES,
+  DEMO_POSTS,
+  DEMO_NOTIFICATIONS,
+  DEMO_STORIES,
+  DEMO_COMMENTS,
+  DEMO_WALKTHROUGH
+} from "./demo-data";
 
 export async function apiRequest(
   method: string,
@@ -19,20 +27,33 @@ export async function apiRequest(
   if (isDemoMode) {
     console.log(`[DEMO MODE] Intercepting ${method} ${url}`);
 
-    // Simple router for demo data
     let responseData: any = null;
+    const cleanUrl = url.split('?')[0];
 
-    if (url.includes("/api/users/me")) responseData = DEMO_USERS[0];
-    else if (url.includes("/api/users/suggested")) responseData = DEMO_USERS.slice(1, 4);
-    else if (url.includes("/api/posts")) responseData = DEMO_POSTS;
-    else if (url.includes("/api/places")) responseData = DEMO_BUSINESSES;
-    else if (url.includes("/api/notifications")) responseData = DEMO_NOTIFICATIONS;
-    else if (url.includes("/api/rewards")) responseData = DEMO_BUSINESSES[0].activeRewards;
-    else if (url.includes("/api/surveys")) responseData = DEMO_BUSINESSES[0].surveys;
-    else if (url.includes("/api/daily-tasks")) responseData = DEMO_BUSINESSES[0].tasks;
+    if (cleanUrl.endsWith("/api/users/me")) responseData = DEMO_USERS[0];
+    else if (cleanUrl.includes("/api/users/suggested")) responseData = DEMO_USERS.slice(1, 4);
+    else if (cleanUrl.includes("/api/posts/")) {
+      const id = parseInt(cleanUrl.split("/").pop() || "0");
+      responseData = DEMO_POSTS.find(p => p.id === id) || DEMO_POSTS[0];
+    }
+    else if (cleanUrl.endsWith("/api/posts")) responseData = DEMO_POSTS;
+    else if (cleanUrl.includes("/api/places")) responseData = DEMO_BUSINESSES;
+    else if (cleanUrl.includes("/api/notifications")) responseData = DEMO_NOTIFICATIONS;
+    else if (cleanUrl.includes("/api/stories")) responseData = DEMO_STORIES;
+    else if (cleanUrl.includes("/comments")) {
+      const postId = parseInt(cleanUrl.split("/api/posts/")[1]?.split("/")[0] || "601");
+      responseData = DEMO_COMMENTS(postId);
+    }
+    else if (cleanUrl.includes("/api/rewards")) responseData = DEMO_BUSINESSES[0].activeRewards;
+    else if (cleanUrl.includes("/api/surveys")) responseData = DEMO_BUSINESSES[0].surveys;
+    else if (cleanUrl.includes("/api/daily-tasks")) responseData = DEMO_BUSINESSES[0].tasks;
+    else if (cleanUrl.includes("/api/points/history")) responseData = DEMO_WALKTHROUGH.wallet.history;
+    else if (cleanUrl.includes("/api/points/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
 
-    // Simulate successful mutation
-    if (method !== "GET" && !responseData) responseData = { success: true, points: 50 };
+    // Default success for mutations
+    if (!responseData && method !== "GET") {
+      responseData = { success: true, message: "Action simulated successfully" };
+    }
 
     return new Response(JSON.stringify(responseData || {}), {
       status: 200,
@@ -64,14 +85,27 @@ export const getQueryFn: <T>(options: {
         console.log(`[DEMO MODE] Intercepting GET ${url}`);
 
         let responseData: any = null;
-        if (url.includes("/api/users/me")) responseData = DEMO_USERS[0];
-        else if (url.includes("/api/users/suggested")) responseData = DEMO_USERS.slice(1, 4);
-        else if (url.includes("/api/posts")) responseData = DEMO_POSTS;
-        else if (url.includes("/api/places")) responseData = DEMO_BUSINESSES;
-        else if (url.includes("/api/notifications")) responseData = DEMO_NOTIFICATIONS;
-        else if (url.includes("/api/rewards")) responseData = DEMO_BUSINESSES[0].activeRewards;
-        else if (url.includes("/api/surveys")) responseData = DEMO_BUSINESSES[0].surveys;
-        else if (url.includes("/api/daily-tasks")) responseData = DEMO_BUSINESSES[0].tasks;
+        const cleanUrl = url.split('?')[0];
+
+        if (cleanUrl.endsWith("/api/users/me")) responseData = DEMO_USERS[0];
+        else if (cleanUrl.includes("/api/users/suggested")) responseData = DEMO_USERS.slice(1, 4);
+        else if (cleanUrl.includes("/api/posts/")) {
+          const id = parseInt(cleanUrl.split("/").pop() || "0");
+          responseData = DEMO_POSTS.find(p => p.id === id) || DEMO_POSTS[0];
+        }
+        else if (cleanUrl.endsWith("/api/posts")) responseData = DEMO_POSTS;
+        else if (cleanUrl.includes("/api/places")) responseData = DEMO_BUSINESSES;
+        else if (cleanUrl.includes("/api/notifications")) responseData = DEMO_NOTIFICATIONS;
+        else if (cleanUrl.includes("/api/stories")) responseData = DEMO_STORIES;
+        else if (cleanUrl.includes("/comments")) {
+          const postId = parseInt(cleanUrl.split("/api/posts/")[1]?.split("/")[0] || "601");
+          responseData = DEMO_COMMENTS(postId);
+        }
+        else if (cleanUrl.includes("/api/rewards")) responseData = DEMO_BUSINESSES[0].activeRewards;
+        else if (cleanUrl.includes("/api/surveys")) responseData = DEMO_BUSINESSES[0].surveys;
+        else if (cleanUrl.includes("/api/daily-tasks")) responseData = DEMO_BUSINESSES[0].tasks;
+        else if (cleanUrl.includes("/api/points/history")) responseData = DEMO_WALKTHROUGH.wallet.history;
+        else if (cleanUrl.includes("/api/points/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
 
         return responseData || {};
       }

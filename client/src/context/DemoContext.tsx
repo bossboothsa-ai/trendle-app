@@ -17,16 +17,28 @@ const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
     const [isDemoMode, setIsDemoMode] = useState(() => {
-        // Priority: 1. Query Param, 2. GitHub Pages Detection, 3. Local Storage
+        // Priority: 1. Query Param, 2. Hostname Detection, 3. Local Storage
         const params = new URLSearchParams(window.location.search);
-        const demoParam = params.get("demo") === "true";
-        const isGitHubPages = window.location.hostname.includes("github.io");
+        const demoParam = params.get("demo");
+        const isDemoHost = window.location.hostname.includes("github.io") || window.location.hostname.includes("localhost");
 
-        if (demoParam || isGitHubPages) {
+        if (demoParam === "true") {
             localStorage.setItem("TRENDLE_DEMO_MODE", "true");
             return true;
         }
-        return localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
+        if (demoParam === "false") {
+            localStorage.setItem("TRENDLE_DEMO_MODE", "false");
+            return false;
+        }
+
+        // If on demo hosts and no explicit local storage, default to TRUE
+        const stored = localStorage.getItem("TRENDLE_DEMO_MODE");
+        if (isDemoHost && stored === null) {
+            localStorage.setItem("TRENDLE_DEMO_MODE", "true");
+            return true;
+        }
+
+        return stored === "true";
     });
 
     const [demoState, setDemoState] = useState({
