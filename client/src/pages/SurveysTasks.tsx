@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/BottomNav";
 import { useSurveys, useSubmitSurvey, useDailyTasks, useCompleteDailyTask } from "@/hooks/use-trendle";
 import { Check, Gift, Sparkles, Loader2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,9 +215,6 @@ export default function SurveysTasks() {
             )}
           </div>
         </section>
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 }

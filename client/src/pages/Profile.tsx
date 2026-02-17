@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/BottomNav";
 import { useUser, usePosts, useFollowUser, useUnfollowUser, useCurrentUser } from "@/hooks/use-trendle";
 import { Settings, Edit3, Award, MapPin, Gift, UserPlus, UserMinus, ChevronLeft } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
@@ -167,8 +166,6 @@ export default function Profile() {
         </div>
       </main>
 
-      <EditProfileModal open={showEditProfile} onOpenChange={setShowEditProfile} />
-      <BottomNav />
-    </div>
+      <EditProfileModal open={showEditProfile} onOpenChange={setShowEditProfile} />    </div>
   );
 }

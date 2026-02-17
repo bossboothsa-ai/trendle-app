@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/BottomNav";
 import { useRewards, useCurrentUser, useRedeemReward } from "@/hooks/use-trendle";
 import { Lock, Gift, Sparkles, Loader2, ChevronLeft, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -125,10 +124,7 @@ export default function Rewards() {
             </div>
           )}
         </div>
-      </div>
-
-      <BottomNav />
-    </div>
+      </div>    </div>
   );
 }
 

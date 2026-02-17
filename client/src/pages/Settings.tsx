@@ -1,5 +1,4 @@
 import { useUser, useUpdateUser, usePointsHistory, useRedemptionHistory } from "@/hooks/use-trendle";
-import { BottomNav } from "@/components/BottomNav";
 import { ChevronRight, Bell, Shield, User as UserIcon, Award, LogOut, Info, Trash2, Mail, Lock, Clock, Gift, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -524,9 +523,6 @@ export default function SettingsPage() {
                         })}
                     </div>
                 </DialogContent>
-            </Dialog>
-
-            <BottomNav />
-        </div>
+            </Dialog>        </div>
     );
 }

@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/BottomNav";
 import { usePlaces } from "@/hooks/use-trendle";
 import { MapPin, Star, X, Info, Utensils, Coffee, Moon, Scissors, Sparkles, ShoppingBag, HeartPulse } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -116,9 +115,6 @@ export default function Explore() {
             onClose={() => setSelectedPlace(null)}
           />
         )}
-      </AnimatePresence>
-
-      <BottomNav />
-    </div>
+      </AnimatePresence>    </div>
   );
 }

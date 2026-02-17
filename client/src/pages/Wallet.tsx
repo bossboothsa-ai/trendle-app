@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/BottomNav";
 import { useCurrentUser, useTransactions, useCashouts } from "@/hooks/use-trendle";
 import {
     Plus,
@@ -169,9 +168,7 @@ export default function Wallet() {
                 </div>
             </div>
 
-            <CashoutFlow open={isCashoutOpen} onOpenChange={setIsCashoutOpen} />
-            <BottomNav />
-        </div>
+            <CashoutFlow open={isCashoutOpen} onOpenChange={setIsCashoutOpen} />        </div>
     );
 }
 
