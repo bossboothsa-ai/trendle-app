@@ -38,7 +38,6 @@ import { DemoProvider } from "@/context/DemoContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AuthPage from "@/pages/AuthPage";
 import VerifyEmail from "@/pages/VerifyEmail";
-import { DevNavigation } from "@/components/DevNavigation";
 // Layouts
 import UserLayout from "@/layouts/UserLayout";
 import BusinessLayout from "@/layouts/BusinessLayout";
@@ -47,7 +46,6 @@ import AdminLayout from "@/layouts/AdminLayout";
 function Router() {
   return (
     <>
-      <DevNavigation />
       <Switch>
         {/* === PUBLIC & AUTH === */}
         <Route path="/user/login" component={AuthPage} />
