@@ -4,10 +4,8 @@ import { Home, Store, Shield, Sparkles } from "lucide-react";
 import { useDemo } from "@/context/DemoContext";
 
 export function DevNavigation() {
-    const [location] = useLocation();
-    const { isDemoMode, setIsDemoMode } = useDemo();
-
-    if (process.env.NODE_ENV !== "development") return null;
+    // Disabled to prevent duplicate navigation on mobile
+    return null;
 
     return (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 bg-black/90 p-2 px-3 rounded-full backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/10">
