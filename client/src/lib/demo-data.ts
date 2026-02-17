@@ -20,7 +20,7 @@ export const DEMO_USERS = [
         bio: "Explorer of urban vibes and hidden gems in Cape Town. Marketing lead by day, foodie by night. ☕🍕🍸",
         location: "Gardens, Cape Town",
         level: "Gold",
-        points: 4250,
+        points: 850,
         followersCount: 842,
         followingCount: 315,
         joinedDate: "Feb 2024",
@@ -29,46 +29,39 @@ export const DEMO_USERS = [
     },
     {
         id: 102,
-        username: "mia_travels",
-        displayName: "Mia van der Walt",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
-        bio: "Student nomad. Always looking for the best study spots and caffeine fixes. 🎓☕",
-        location: "Rondebosch, Cape Town",
-        level: "Silver",
-        points: 1200,
-        followersCount: 520,
-        followingCount: 410,
-        joinedDate: "Jan 2025"
+        username: "Alex_Creative",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+        bio: "Digital Artist & Coffee Addict. Always hunting for the perfect light and the strongest espresso. 🎨📸",
+        level: "Trendsetter",
+        points: 2100,
+        followingCount: 450,
+        followersCount: 1200,
+        publicActivityId: "ALEX-404",
     },
     {
         id: 103,
-        username: "leo_creatives",
-        displayName: "Leo Dube",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-        bio: "Visual storyteller. Capturing the soul of Mother City one frame at a time. 📸✨",
-        location: "Seapoint, Cape Town",
-        level: "Platinum",
-        points: 8500,
-        followersCount: 15400,
-        followingCount: 890,
-        joinedDate: "May 2023"
+        username: "Sarah_Wellness",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
+        bio: "Yoga teacher | Plant-based foodie | Sea point lover. Promoting health and happiness in CT. 🧘‍♀️🍏",
+        level: "Local Guide",
+        points: 1850,
+        followingCount: 67,
+        followersCount: 432,
+        publicActivityId: "SARAH-551",
     },
     {
         id: 104,
-        username: "sarah_styles",
-        displayName: "Sarah Jenkins",
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80",
-        bio: "Fashion design student. Lover of local boutiques and thrifting. 👗♻️",
-        location: "Woodstock, Cape Town",
-        level: "Bronze",
-        points: 450,
-        followersCount: 320,
-        followingCount: 280,
-        joinedDate: "Mar 2026"
+        username: "David_Hikes",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+        bio: "Table Mountain is my backyard. 🧗‍♂️ Weekly hikes and outdoor adventures. Join the journey!",
+        level: "Explorer",
+        points: 920,
+        followingCount: 230,
+        followersCount: 156,
+        publicActivityId: "DAVE-220",
     },
     {
         id: 105,
-        username: "dj_pulse",
         displayName: "Kevin 'Pulse' Smith",
         avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
         bio: "Chasing the best beats and the coolest bars. Resident at Sunsets CT. 🎧🍸",
@@ -164,404 +157,126 @@ const DEFAULT_SURVEY = {
 };
 
 export const DEMO_BUSINESSES = [
-    // COFFEE
     {
-        id: 201,
-        name: "Artisan Brew Lab",
+        id: 1,
+        name: "Origin Coffee Roasting",
+        description: "The pioneer of artisan coffee in South Africa. Our warehouse space in De Waterkant is where the magic happens. Experience the art of the perfect pour.",
         category: "Coffee",
-        description: "Precision brewing and artisanal pastries in a sun-drenched industrial space.",
-        location: "Gardens, Cape Town",
-        image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&q=80",
+        location: "De Waterkant, Cape Town",
+        image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
+        rating: 4.9,
+        pointsPerVisit: 50,
+        distance: "0.8km",
         hours: "07:00 - 18:00",
-        pointsPerVisit: 50,
-        activeRewards: [{ id: 301, title: "Free Cappuccino", points: 500 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
+        gallery: [
+            "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&q=80",
+            "https://images.unsplash.com/photo-1442115994334-03290680fd74?w=600&q=80",
+            "https://images.unsplash.com/photo-1497933321162-041002ee3c0e?w=600&q=80"
+        ],
+        activeRewards: [
+            { id: 201, title: "Free Flat White", description: "Enjoy a complimentary signature flat white on your 5th visit.", cost: 250, category: "product", image: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?w=400&q=80", placeId: 1, locked: false },
+            { id: 202, title: "Origin Beans (250g)", description: "Take the taste of Origin home with a bag of our best beans.", cost: 1200, category: "product", image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80", placeId: 1, locked: false },
+            { id: 203, title: "Brewing Workshop", description: "Master the V60 and AeroPress with our lead roaster.", cost: 5000, category: "experience", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80", placeId: 1, locked: true }
+        ],
+        surveys: [
+            {
+                id: 301,
+                title: "Your Coffee Experience",
+                description: "Tell us how we did and earn 100 points!",
+                points: 100,
+                questions: [
+                    { type: "choice", question: "How would you rate the brew quality?", options: ["Excellent", "Good", "Average", "Below Expectations"] },
+                    { type: "choice", question: "Did our baristas make you feel welcome?", options: ["Yes, very!", "Somewhat", "Not really"] }
+                ]
+            }
+        ],
+        tasks: [
+            { id: 401, title: "Morning Ritual", description: "Check in before 10 AM to earn bonus points.", points: 25, type: "Check-in", active: true, placeId: 1 }
+        ]
     },
     {
-        id: 202,
-        name: "The Roasted Bean",
-        category: "Coffee",
-        description: "Small-batch roastery with a focus on ethical sourcing and bold flavors.",
-        location: "De Waterkant, Cape Town",
-        image: "https://images.unsplash.com/photo-1442119020942-835691461973?w=1200&q=80",
-        hours: "07:30 - 17:00",
-        pointsPerVisit: 40,
-        activeRewards: [{ id: 302, title: "Espresso Shot", points: 200 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 203,
-        name: "Coastal Coffee Co",
-        category: "Coffee",
-        description: "Ocean-side cafe serving the best flat white in the Atlantic Seaboard.",
-        location: "Seapoint, Cape Town",
-        image: "https://images.unsplash.com/photo-1501339817302-4476af5a17d3?w=1200&q=80",
-        hours: "06:30 - 16:00",
-        pointsPerVisit: 30,
-        activeRewards: [{ id: 303, title: "Scone & Jam", points: 400 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 204,
-        name: "Morning Glory Hub",
-        category: "Coffee",
-        description: "Bright, plant-filled sanctuary for morning reflection and healthy bowls.",
-        location: "Greenpoint, Cape Town",
-        image: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?w=1200&q=80",
-        hours: "07:00 - 15:00",
-        pointsPerVisit: 50,
-        activeRewards: [{ id: 304, title: "Oat Milk Upgrade", points: 150 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 205,
-        name: "Urban Roast",
-        category: "Coffee",
-        description: "Serious coffee for the city bowl's working crowd. Precision brewing.",
-        location: "City Bowl, Cape Town",
-        image: "https://images.unsplash.com/photo-1498804103079-a6351b050096?w=1200&q=80",
-        hours: "08:00 - 17:00",
-        pointsPerVisit: 60,
-        activeRewards: [{ id: 305, title: "Pastry of Choice", points: 450 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-
-    // EAT
-    {
-        id: 206,
-        name: "Vineyard Table",
+        id: 2,
+        name: "The Test Kitchen Fledgelings",
+        description: "A philanthropic initiative by Luke Dale Roberts. Incredible fine dining with a heart. Every dish tells a story of mentorship and passion.",
         category: "Eat",
-        description: "Modern South African cuisine with seasonal local ingredients and wine pairings.",
-        location: "Constantia, Cape Town",
-        image: "https://images.unsplash.com/photo-1550966848-01ca3047f318?w=1200&q=80",
+        location: "Woodstock, Cape Town",
+        image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80",
+        rating: 4.8,
+        pointsPerVisit: 150,
+        distance: "2.4km",
         hours: "12:00 - 22:00",
-        pointsPerVisit: 100,
-        activeRewards: [{ id: 306, title: "Signature Dessert", points: 800 }],
+        gallery: [
+            "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80",
+            "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80",
+            "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80"
+        ],
+        activeRewards: [
+            { id: 301, title: "Glass of MCC", description: "A celebratory glass of South Africa's finest sparkling wine.", cost: 500, category: "drink", image: "https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?w=400&q=80", placeId: 2, locked: false },
+            { id: 302, title: "Chef's Special Dessert", description: "A unique seasonal creation from the kitchen.", cost: 800, category: "product", image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&q=80", placeId: 2, locked: false }
+        ],
         surveys: [DEFAULT_SURVEY],
         tasks: DEFAULT_TASKS
     },
     {
-        id: 207,
-        name: "The Zen Garden",
+        id: 3,
+        name: "Fyn Restaurant",
+        description: "Where South Africa meets Japan. Explore an urban, sophisticated dining experience overlooking the city bowl.",
         category: "Eat",
-        description: "Plant-forward dining in a relaxed setting. Vibrant and delicious.",
-        location: "Kloof Street, Cape Town",
-        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80",
-        hours: "10:00 - 21:00",
-        pointsPerVisit: 70,
-        activeRewards: [{ id: 307, title: "Fresh Juice", points: 350 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 208,
-        name: "Atlantic Grill",
-        category: "Eat",
-        description: "Fresh seafood caught daily and grilled over open flames.",
-        location: "Camps Bay, Cape Town",
-        image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&q=80",
-        hours: "12:00 - 23:00",
-        pointsPerVisit: 120,
-        activeRewards: [{ id: 308, title: "Platter Upgrade", points: 1200 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 209,
-        name: "Street Soul",
-        category: "Eat",
-        description: "Global street food in a trendy, industrial Woodstock setting.",
-        location: "Woodstock, Cape Town",
-        image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80",
-        hours: "11:00 - 20:00",
-        pointsPerVisit: 50,
-        activeRewards: [{ id: 309, title: "Taco Trio", points: 600 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 210,
-        name: "Mama Africa Modern",
-        category: "Eat",
-        description: "Authentic local flavors served with a sleek modern twist.",
-        location: "City Bowl, Cape Town",
-        image: "https://images.unsplash.com/photo-1514327605112-b887c0e61c0a?w=1200&q=80",
-        hours: "11:00 - 22:00",
-        pointsPerVisit: 80,
-        activeRewards: [{ id: 310, title: "Traditional Platter", points: 900 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-
-    // DRINK
-    {
-        id: 211,
-        name: "Botanical Bar",
-        category: "Drink",
-        description: "Craft gin specialists using unique local fynbos botanicals.",
-        location: "Bree Street, Cape Town",
-        image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=1200&q=80",
-        hours: "16:00 - 01:00",
-        pointsPerVisit: 80,
-        activeRewards: [{ id: 311, title: "Classic G&T", points: 600 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 212,
-        name: "Cloud 9 Lounge",
-        category: "Drink",
-        description: "Rooftop lounge with 360-degree views and premium DJ sets.",
-        location: "De Waterkant, Cape Town",
-        image: "https://images.unsplash.com/photo-1536922246289-88c42f957773?w=1200&q=80",
-        hours: "15:00 - 02:00",
-        pointsPerVisit: 150,
-        activeRewards: [{ id: 312, title: "Signature Martini", points: 750 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 213,
-        name: "The Anchor Pub",
-        category: "Drink",
-        description: "Classic surf pub vibes with a massive craft beer selection.",
-        location: "Muizenberg, Cape Town",
-        image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=1200&q=80",
-        hours: "11:00 - 00:00",
-        pointsPerVisit: 40,
-        activeRewards: [{ id: 313, title: "Craft Pint", points: 400 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 214,
-        name: "Velvet Jazz Bar",
-        category: "Drink",
-        description: "Speakeasy lounge featuring live jazz and prohibition-era cocktails.",
-        location: "Gardens, Cape Town",
-        image: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=1200&q=80",
-        hours: "18:00 - 02:00",
-        pointsPerVisit: 90,
-        activeRewards: [{ id: 314, title: "Old Fashioned", points: 800 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 215,
-        name: "Copper & Oak",
-        category: "Drink",
-        description: "Sophisticated whiskey bar with an extensive rare malt library.",
-        location: "Seapoint, Cape Town",
-        image: "https://images.unsplash.com/photo-1527661591475-527312dd6505?w=1200&q=80",
-        hours: "17:00 - 01:00",
-        pointsPerVisit: 100,
-        activeRewards: [{ id: 315, title: "Whiskey Flight", points: 1500 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-
-    // PLAY
-    {
-        id: 216,
-        name: "Surf Collective",
-        category: "Play",
-        description: "Premium surf lessons and equipment hire for all skill levels.",
-        location: "Blouberg, Cape Town",
-        image: "https://images.unsplash.com/photo-1502680399488-2a6574c5d41b?w=1200&q=80",
-        hours: "08:00 - 18:00",
+        location: "CBD, Cape Town",
+        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
+        rating: 4.9,
         pointsPerVisit: 200,
-        activeRewards: [{ id: 316, title: "Board Hire (2hr)", points: 1000 }],
+        distance: "1.2km",
+        hours: "12:00 - 22:00",
+        gallery: [
+            "https://images.unsplash.com/photo-1550966841-3ee5ad01104a?w=600&q=80",
+            "https://images.unsplash.com/photo-1514327605112-b887c0e61c0a?w=600&q=80"
+        ],
+        activeRewards: [
+            { id: 303, title: "Sake Pairing Upgrade", description: "Elevate your journey with premium sake selections.", cost: 1500, category: "drink", image: "https://images.unsplash.com/photo-1571767454098-246b94fbcf70?w=400&q=80", placeId: 3, locked: false }
+        ],
         surveys: [DEFAULT_SURVEY],
         tasks: DEFAULT_TASKS
     },
     {
-        id: 217,
-        name: "Game Night Cafe",
+        id: 4,
+        name: "The Power & The Glory",
+        description: "The neighborhood staple. By day a bustling cafe, by night a legendary bar. The heart of Tamboerskloof.",
+        category: "Drink",
+        location: "Tamboerskloof, Cape Town",
+        image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&q=80",
+        rating: 4.7,
+        pointsPerVisit: 75,
+        distance: "1.5km",
+        hours: "07:00 - 01:00",
+        gallery: [
+            "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&q=80",
+            "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=80"
+        ],
+        activeRewards: [
+            { id: 304, title: "Neighborhood Pint", description: "Any local craft beer on tap.", cost: 400, category: "drink", image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&q=80", placeId: 4, locked: false }
+        ],
+        surveys: [DEFAULT_SURVEY],
+        tasks: DEFAULT_TASKS
+    },
+    {
+        id: 5,
+        name: "Honest Chocolate",
+        description: "Small-batch organic chocolate cafe. Try our famous chocolate cake or a rich hot cocoa in our secret courtyard.",
         category: "Play",
-        description: "Hundreds of board games and cozy vibes for an immersive evening.",
-        location: "Kloof Street, Cape Town",
-        image: "https://images.unsplash.com/photo-1610890733551-51890f63665a?w=1200&q=80",
-        hours: "10:00 - 22:00",
-        pointsPerVisit: 50,
-        activeRewards: [{ id: 317, title: "Cover Charge Waived", points: 300 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 218,
-        name: "National Park Hikes",
-        category: "Play",
-        description: "Guided tours through the world-famous Table Mountain trails.",
-        location: "Newlands, Cape Town",
-        image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=80",
-        hours: "06:00 - 18:00",
-        pointsPerVisit: 250,
-        activeRewards: [{ id: 318, title: "Sunrise Tour", points: 2000 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 219,
-        name: "Zipline Canopy CT",
-        category: "Play",
-        description: "Adrenaline-fueled canopy tours with incredible valley views.",
-        location: "Constantia, Cape Town",
-        image: "https://images.unsplash.com/photo-1521747116042-5a810fda9664?w=1200&q=80",
-        hours: "09:00 - 17:00",
-        pointsPerVisit: 300,
-        activeRewards: [{ id: 319, title: "GoPro Footage", points: 1500 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 220,
-        name: "Waterfront Mini-Golf",
-        category: "Play",
-        description: "Neon-lit mini-golf fun for groups and families.",
-        location: "V&A Waterfront, Cape Town",
-        image: "https://images.unsplash.com/photo-1523313222784-242643a68270?w=1200&q=80",
-        hours: "10:00 - 23:00",
-        pointsPerVisit: 100,
-        activeRewards: [{ id: 320, title: "Extra Round", points: 500 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-
-    // SHOP
-    {
-        id: 221,
-        name: "Retro Revival",
-        category: "Shop",
-        description: "Curated vintage fashion and accessories from every decade.",
-        location: "Observatory, Cape Town",
-        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80",
-        hours: "10:00 - 18:00",
-        pointsPerVisit: 50,
-        activeRewards: [{ id: 321, title: "R100 Voucher", points: 1000 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 222,
-        name: "The Maker's Hub",
-        category: "Shop",
-        description: "Handmade local goods, ceramics, and organic beauty products.",
-        location: "Woodstock, Cape Town",
-        image: "https://images.unsplash.com/photo-1534452203294-49c8913721b2?w=1200&q=80",
-        hours: "09:00 - 17:00",
-        pointsPerVisit: 40,
-        activeRewards: [{ id: 322, title: "Canvas Tote", points: 400 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 223,
-        name: "Luxe Boutique",
-        category: "Shop",
-        description: "Exclusive designer labels and contemporary high-end fashion.",
-        location: "Seapoint, Cape Town",
-        image: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=1200&q=80",
-        hours: "10:00 - 19:00",
-        pointsPerVisit: 150,
-        activeRewards: [{ id: 323, title: "Personal Stylist Session", points: 5000 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 224,
-        name: "Thread & Leather",
-        category: "Shop",
-        description: "Bespoke leather goods and handcrafted jewelry collective.",
-        location: "Bree Street, Cape Town",
-        image: "https://images.unsplash.com/photo-1582559930331-50e56214041d?w=1200&q=80",
-        hours: "10:00 - 18:00",
-        pointsPerVisit: 80,
-        activeRewards: [{ id: 324, title: "Leather Care Kit", points: 600 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 225,
-        name: "Sneaker Grail",
-        category: "Shop",
-        description: "Exclusive sneaker boutique with the rarest hype drops.",
-        location: "Loop Street, Cape Town",
-        image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=80",
-        hours: "10:00 - 19:00",
-        pointsPerVisit: 200,
-        activeRewards: [{ id: 325, title: "Shoe Shield Treatment", points: 350 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-
-    // GLOW
-    {
-        id: 226,
-        name: "Prism Hair Studio",
-        category: "Glow",
-        description: "Expert colorists and high-fashion styling specialists.",
-        location: "Gardens, Cape Town",
-        image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80",
+        location: "CBD, Cape Town",
+        image: "https://images.unsplash.com/photo-1511381939415-e4401546383a?w=800&q=80",
+        rating: 4.8,
+        pointsPerVisit: 60,
+        distance: "1.1km",
         hours: "09:00 - 18:00",
-        pointsPerVisit: 200,
-        activeRewards: [{ id: 326, title: "Deep Treatment", points: 900 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 227,
-        name: "Neon Nails",
-        category: "Glow",
-        description: "Creative nail art and luxury manicures in a trendy setting.",
-        location: "Seapoint, Cape Town",
-        image: "https://images.unsplash.com/photo-1604654894610-df490998710c?w=1200&q=80",
-        hours: "09:00 - 19:00",
-        pointsPerVisit: 80,
-        activeRewards: [{ id: 327, title: "Nail Art Upgrade", points: 400 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 228,
-        name: "Pure Skin Spa",
-        category: "Glow",
-        description: "Holistic facials and stress-relief massages using organic oils.",
-        location: "Constantia, Cape Town",
-        image: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=1200&q=80",
-        hours: "10:00 - 17:00",
-        pointsPerVisit: 250,
-        activeRewards: [{ id: 328, title: "Express Facial", points: 1500 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 229,
-        name: "Sharp Barber Co",
-        category: "Glow",
-        description: "Traditional grooming for the modern man. Sharp fades and hot towel shaves.",
-        location: "Bree Street, Cape Town",
-        image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=80",
-        hours: "08:00 - 20:00",
-        pointsPerVisit: 100,
-        activeRewards: [{ id: 329, title: "Hot Towel Shave", points: 800 }],
-        surveys: [DEFAULT_SURVEY],
-        tasks: DEFAULT_TASKS
-    },
-    {
-        id: 230,
-        name: "Aura Beauty & Brows",
-        category: "Glow",
-        description: "Specialized brow shaping and full-service beauty transformations.",
-        location: "Claremont, Cape Town",
-        image: "https://images.unsplash.com/photo-1522335789253-06109963266b?w=1200&q=80",
-        hours: "09:00 - 18:00",
-        pointsPerVisit: 150,
-        activeRewards: [{ id: 330, title: "Brow Tint", points: 500 }],
+        gallery: [
+            "https://images.unsplash.com/photo-1548907040-4baa42d10919?w=600&q=80",
+            "https://images.unsplash.com/photo-1511914265872-c40672604a80?w=600&q=80"
+        ],
+        activeRewards: [
+            { id: 305, title: "Artisan Chocolate Box", description: "A curated selection of 4 handcrafted truffles.", cost: 600, category: "product", image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?w=400&q=80", placeId: 5, locked: false }
+        ],
         surveys: [DEFAULT_SURVEY],
         tasks: DEFAULT_TASKS
     }
@@ -569,44 +284,44 @@ export const DEMO_BUSINESSES = [
 
 // Generate 50 posts with varied timestamps and content
 export const DEMO_POSTS = Array.from({ length: 50 }).map((_, i) => {
-    const user = DEMO_USERS[i % 10];
-    const biz = DEMO_BUSINESSES[i % 30];
+    const user = DEMO_USERS[i % 10] || DEMO_USERS[0];
+    const biz = DEMO_BUSINESSES[i % DEMO_BUSINESSES.length] || DEMO_BUSINESSES[0];
     const category = biz.category;
 
     let caption = `Loved my visit to ${biz.name}! The vibes are perfect. #Trendle #CapeTown`;
     if (category === "Coffee") caption = `Best caffeine fix at ${biz.name}. The latte art is incredible! ☕✨ #CoffeeLovers`;
     if (category === "Drink") caption = `Sipping on perfection at ${biz.name}. The sunset views are unbeatable. 🍸🌆 #Nightlife`;
-    if (category === "Eat") caption = `Best meal I've had in a while at ${biz.name}. Highy recommend! 🍕🍴 #CTFoodie`;
-    if (category === "Glow") caption = `Feeling fresh after my session at ${biz.name}. 💅✨ #GlowUp #SelfCare`;
+    if (category === "Eat") caption = `Best meal I've had in a while at ${biz.name}. Highly recommend! 🍕🍴 #CTFoodie`;
+    if (category === "Play") caption = `Having the time of my life at ${biz.name}! 🌟✨ #PlayTime #CapeTown`;
 
     return {
         id: 601 + i,
         userId: user.id,
         author: user,
-        media: [{ type: 'image', url: biz.image }], // Using biz image as post media for visual consistency
+        media: [{ type: 'image', url: biz.image }],
         caption,
         placeId: biz.id,
         place: biz,
         likesCount: Math.floor(Math.random() * 500) + 50,
         commentsCount: Math.floor(Math.random() * 50) + 5,
-        createdAt: new Date(Date.now() - i * 3600000 * 2).toISOString(), // Staggered by 2 hours
+        createdAt: new Date(Date.now() - i * 3600000 * 2).toISOString(),
         hasLiked: i % 3 === 0
     };
 });
 
 export const DEMO_COMMENTS = (postId: number) => [
-    { id: 801, userId: 102, user: DEMO_USERS[1], text: "Wow, need to go there! ✨", createdAt: "5m ago" },
-    { id: 802, userId: 104, user: DEMO_USERS[3], text: "Best vibes in town for sure.", createdAt: "10m ago" },
-    { id: 803, userId: 106, user: DEMO_USERS[5], text: "Added to my list! 📍", createdAt: "1h ago" },
-    { id: 804, userId: 108, user: DEMO_USERS[7], text: "The service here is top-notch. 🏆", createdAt: "3h ago" },
-    { id: 805, userId: 109, user: DEMO_USERS[8], text: "Incredible views! 😍", createdAt: "5h ago" }
+    { id: 801, userId: 101, user: DEMO_USERS[0], text: "Wow, need to go there! ✨", createdAt: "5m ago" },
+    { id: 802, userId: 102, user: DEMO_USERS[1], text: "Best vibes in town for sure.", createdAt: "10m ago" },
+    { id: 803, userId: 103, user: DEMO_USERS[2], text: "Added to my list! 📍", createdAt: "1h ago" },
+    { id: 804, userId: 104, user: DEMO_USERS[3], text: "The service here is top-notch. 🏆", createdAt: "3h ago" },
+    { id: 805, userId: 105, user: DEMO_USERS[4], text: "Incredible views! 😍", createdAt: "5h ago" }
 ];
 
 export const DEMO_STORIES = Array.from({ length: 15 }).map((_, i) => ({
     id: 901 + i,
-    userId: DEMO_USERS[i % 10].id,
-    user: DEMO_USERS[i % 10],
-    media: [{ type: 'image', url: DEMO_BUSINESSES[i % 30].image }],
+    userId: DEMO_USERS[i % 5].id,
+    user: DEMO_USERS[i % 5],
+    media: [{ type: 'image', url: DEMO_BUSINESSES[i % DEMO_BUSINESSES.length].image }],
     createdAt: new Date(Date.now() - i * 1800000).toISOString(),
     caption: "Live from the city! 🏙️"
 }));
@@ -615,21 +330,31 @@ export const DEMO_NOTIFICATIONS = [
     { id: 1001, type: "like", userId: 102, user: DEMO_USERS[1], text: "liked your post", createdAt: "2m ago" },
     { id: 1002, type: "comment", userId: 103, user: DEMO_USERS[2], text: "commented: 'Love this vibe!'", createdAt: "15m ago" },
     { id: 1003, type: "follow", userId: 105, user: DEMO_USERS[4], text: "started following you", createdAt: "1h ago" },
-    { id: 1004, type: "reward", userId: 106, user: DEMO_BUSINESSES[0], text: "Points earned for check-in", createdAt: "2h ago" }
+    { id: 1004, type: "reward", userId: 1, name: "Origin Coffee Roasting", text: "Points earned for check-in", createdAt: "2h ago" }
 ];
 
 export const DEMO_WALKTHROUGH = {
     wallet: {
-        points: 4250,
+        points: 850,
         history: [
-            { id: 1, amount: 50, reason: "Check-in at Artisan Brew Lab", createdAt: "Today" },
-            { id: 2, amount: 100, reason: "Completed Survey: Experience Survey", createdAt: "Yesterday" },
-            { id: 3, amount: 60, reason: "Task: Capture the Vibe", createdAt: "2 days ago" },
-            { id: 4, amount: 500, reason: "Bonus for Gold Level achievement", createdAt: "1 week ago" }
+            { id: 1, type: "earned", amount: 50, description: "Check-in at Origin Coffee Roasting", status: "completed", date: new Date().toISOString() },
+            { id: 2, type: "earned", amount: 100, description: "Experience Survey: Origin", status: "completed", date: new Date(Date.now() - 86400000).toISOString() },
+            { id: 3, type: "earned", amount: 25, description: "Task: Morning Ritual", status: "completed", date: new Date(Date.now() - 172800000).toISOString() },
+            { id: 4, type: "earned", amount: 500, description: "Trendsetter Achievement Bonus", status: "completed", date: new Date(Date.now() - 604800000).toISOString() },
+            { id: 5, type: "earned", amount: 150, description: "Verified Moment Reward", status: "completed", date: new Date(Date.now() - 1209600000).toISOString() },
+            { id: 6, type: "redeemed", amount: 250, description: "Free Flat White - Origin", status: "completed", date: new Date(Date.now() - 1500000).toISOString() },
+            { id: 7, type: "cashout", amount: 500, description: "Bank Transfer Payout", status: "pending", date: new Date(Date.now() - 3600000).toISOString() }
         ],
         redemptions: [
-            { id: 1, title: "Free Cappuccino", points: 500, status: "completed", date: "Last week" },
-            { id: 2, title: "Signature Dessert", points: 800, status: "pending", date: "Today" }
+            { id: 1, title: "Free Flat White", points: 250, status: "completed", date: "Last week" },
+            { id: 2, title: "Glass of MCC", points: 500, status: "pending", date: "Today" }
+        ],
+        cashouts: [
+            { id: 1, amount: 500, type: "bank", status: "pending", createdAt: new Date(Date.now() - 3600000).toISOString() }
         ]
     }
 };
+
+export const DEMO_TRANSACTIONS = DEMO_WALKTHROUGH.wallet.history;
+export const DEMO_CASHOUTS = DEMO_WALKTHROUGH.wallet.cashouts;
+

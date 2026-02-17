@@ -15,6 +15,8 @@ import {
   DEMO_STORIES,
   DEMO_COMMENTS,
   DEMO_WALKTHROUGH,
+  DEMO_TRANSACTIONS,
+  DEMO_CASHOUTS,
   isInDemoMode
 } from "./demo-data";
 
@@ -31,11 +33,20 @@ export async function apiRequest(
 
     if (cleanUrl.endsWith("/api/users/me")) responseData = DEMO_USERS[0];
     else if (cleanUrl.includes("/api/users/suggested")) responseData = DEMO_USERS.slice(1, 4);
+    else if (cleanUrl.includes("/api/users/")) {
+      const id = parseInt(cleanUrl.split("/").pop() || "0");
+      responseData = DEMO_USERS.find(u => u.id === id) || DEMO_USERS[0];
+    }
     else if (cleanUrl.includes("/api/posts/")) {
       const id = parseInt(cleanUrl.split("/").pop() || "0");
       responseData = DEMO_POSTS.find(p => p.id === id) || DEMO_POSTS[0];
     }
     else if (cleanUrl.endsWith("/api/posts")) responseData = DEMO_POSTS;
+    else if (cleanUrl.includes("/api/places/")) {
+      const parts = cleanUrl.split("/");
+      const id = parseInt(parts[parts.length - 1] || "0") || parseInt(parts[parts.length - 2] || "0");
+      responseData = DEMO_BUSINESSES.find(b => b.id === id) || DEMO_BUSINESSES[0];
+    }
     else if (cleanUrl.includes("/api/places")) responseData = DEMO_BUSINESSES;
     else if (cleanUrl.includes("/api/notifications")) responseData = DEMO_NOTIFICATIONS;
     else if (cleanUrl.includes("/api/stories")) responseData = DEMO_STORIES;
@@ -43,11 +54,25 @@ export async function apiRequest(
       const postId = parseInt(cleanUrl.split("/api/posts/")[1]?.split("/")[0] || "601");
       responseData = DEMO_COMMENTS(postId);
     }
-    else if (cleanUrl.includes("/api/rewards")) responseData = DEMO_BUSINESSES[0].activeRewards;
-    else if (cleanUrl.includes("/api/surveys")) responseData = DEMO_BUSINESSES[0].surveys;
-    else if (cleanUrl.includes("/api/daily-tasks")) responseData = DEMO_BUSINESSES[0].tasks;
     else if (cleanUrl.includes("/api/points/history")) responseData = DEMO_WALKTHROUGH.wallet.history;
     else if (cleanUrl.includes("/api/points/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
+    else if (cleanUrl.includes("/api/rewards")) {
+      const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
+      responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.activeRewards || DEMO_BUSINESSES[0].activeRewards;
+    }
+    else if (cleanUrl.includes("/api/surveys")) {
+      const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
+      responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.surveys || DEMO_BUSINESSES[0].surveys;
+    }
+    else if (cleanUrl.includes("/api/daily-tasks")) {
+      const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
+      responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.tasks || DEMO_BUSINESSES[0].tasks;
+    }
+    else if (cleanUrl.includes("/api/wallet/transactions")) responseData = DEMO_TRANSACTIONS;
+    else if (cleanUrl.includes("/api/wallet/cashouts")) responseData = DEMO_CASHOUTS;
+    else if (cleanUrl.includes("/api/users/me/points-history")) responseData = DEMO_TRANSACTIONS;
+    else if (cleanUrl.includes("/api/users/me/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
+    else if (cleanUrl.includes("/api/rewards/history")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
 
     // Default success for mutations
     if (!responseData && method !== "GET") {
@@ -86,11 +111,20 @@ export const getQueryFn: <T>(options: {
 
         if (cleanUrl.endsWith("/api/users/me")) responseData = DEMO_USERS[0];
         else if (cleanUrl.includes("/api/users/suggested")) responseData = DEMO_USERS.slice(1, 4);
+        else if (cleanUrl.includes("/api/users/")) {
+          const id = parseInt(cleanUrl.split("/").pop() || "0");
+          responseData = DEMO_USERS.find(u => u.id === id) || DEMO_USERS[0];
+        }
         else if (cleanUrl.includes("/api/posts/")) {
           const id = parseInt(cleanUrl.split("/").pop() || "0");
           responseData = DEMO_POSTS.find(p => p.id === id) || DEMO_POSTS[0];
         }
         else if (cleanUrl.endsWith("/api/posts")) responseData = DEMO_POSTS;
+        else if (cleanUrl.includes("/api/places/")) {
+          const parts = cleanUrl.split("/");
+          const id = parseInt(parts[parts.length - 1] || "0") || parseInt(parts[parts.length - 2] || "0");
+          responseData = DEMO_BUSINESSES.find(b => b.id === id) || DEMO_BUSINESSES[0];
+        }
         else if (cleanUrl.includes("/api/places")) responseData = DEMO_BUSINESSES;
         else if (cleanUrl.includes("/api/notifications")) responseData = DEMO_NOTIFICATIONS;
         else if (cleanUrl.includes("/api/stories")) responseData = DEMO_STORIES;
@@ -98,11 +132,25 @@ export const getQueryFn: <T>(options: {
           const postId = parseInt(cleanUrl.split("/api/posts/")[1]?.split("/")[0] || "601");
           responseData = DEMO_COMMENTS(postId);
         }
-        else if (cleanUrl.includes("/api/rewards")) responseData = DEMO_BUSINESSES[0].activeRewards;
-        else if (cleanUrl.includes("/api/surveys")) responseData = DEMO_BUSINESSES[0].surveys;
-        else if (cleanUrl.includes("/api/daily-tasks")) responseData = DEMO_BUSINESSES[0].tasks;
         else if (cleanUrl.includes("/api/points/history")) responseData = DEMO_WALKTHROUGH.wallet.history;
         else if (cleanUrl.includes("/api/points/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
+        else if (cleanUrl.includes("/api/rewards")) {
+          const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
+          responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.activeRewards || DEMO_BUSINESSES[0].activeRewards;
+        }
+        else if (cleanUrl.includes("/api/surveys")) {
+          const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
+          responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.surveys || DEMO_BUSINESSES[0].surveys;
+        }
+        else if (cleanUrl.includes("/api/daily-tasks")) {
+          const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
+          responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.tasks || DEMO_BUSINESSES[0].tasks;
+        }
+        else if (cleanUrl.includes("/api/wallet/transactions")) responseData = DEMO_TRANSACTIONS;
+        else if (cleanUrl.includes("/api/wallet/cashouts")) responseData = DEMO_CASHOUTS;
+        else if (cleanUrl.includes("/api/users/me/points-history")) responseData = DEMO_TRANSACTIONS;
+        else if (cleanUrl.includes("/api/users/me/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
+        else if (cleanUrl.includes("/api/rewards/history")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
 
         return responseData || {};
       }
