@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { DEMO_USERS, DEMO_BUSINESSES, DEMO_POSTS, DEMO_NOTIFICATIONS } from "@/lib/demo-data";
+import { DEMO_USERS, DEMO_BUSINESSES, DEMO_POSTS, DEMO_NOTIFICATIONS, isInDemoMode } from "@/lib/demo-data";
 
 // ============================================
 // USERS & PROFILE
@@ -38,7 +38,7 @@ export function useUser(id?: number) {
   return useQuery({
     queryKey: key,
     queryFn: async () => {
-      if (isDemoMode) return DEMO_USERS[0];
+      if (isInDemoMode()) return DEMO_USERS[0];
       const res = await apiRequest("GET", path);
       return (id ? api.users.get.responses[200] : api.users.me.responses[200]).parse(await res.json());
     },
@@ -54,11 +54,10 @@ export function useCurrentUser() {
 // ============================================
 
 export function usePlaces() {
-  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.places.list.path],
     queryFn: async () => {
-      if (isDemoMode) return DEMO_BUSINESSES;
+      if (isInDemoMode()) return DEMO_BUSINESSES;
       const res = await apiRequest("GET", api.places.list.path);
       return api.places.list.responses[200].parse(await res.json());
     },
@@ -84,11 +83,10 @@ export function usePlace(id: number) {
 // ============================================
 
 export function usePosts(filter?: 'all' | 'following' | 'foryou', placeId?: string, userId?: number) {
-  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.posts.list.path, { filter, placeId, userId }],
     queryFn: async () => {
-      if (isDemoMode) return DEMO_POSTS;
+      if (isInDemoMode()) return DEMO_POSTS;
 
       // Build query params
       const params = new URLSearchParams();
@@ -100,17 +98,16 @@ export function usePosts(filter?: 'all' | 'following' | 'foryou', placeId?: stri
       const res = await apiRequest("GET", url);
       return api.posts.list.responses[200].parse(await res.json());
     },
-    refetchInterval: isDemoMode ? false : 15000,
+    refetchInterval: isInDemoMode() ? false : 15000,
   });
 }
 
 
 export function useSuggestedUsers() {
-  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.users.suggested.path],
     queryFn: async () => {
-      if (isDemoMode) return DEMO_USERS.slice(1, 6);
+      if (isInDemoMode()) return DEMO_USERS.slice(1, 6);
       const res = await apiRequest("GET", api.users.suggested.path);
       return api.users.suggested.responses[200].parse(await res.json());
     }
@@ -266,11 +263,10 @@ export function useLikePost() {
 // ============================================
 
 export function useRewards() {
-  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.rewards.list.path],
     queryFn: async () => {
-      if (isDemoMode) return DEMO_BUSINESSES[0].activeRewards;
+      if (isInDemoMode()) return DEMO_BUSINESSES[0].activeRewards;
       const res = await apiRequest("GET", api.rewards.list.path);
       return api.rewards.list.responses[200].parse(await res.json());
     },
@@ -370,11 +366,10 @@ export function useCreateComment() {
 // ============================================
 
 export function useSurveys() {
-  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.surveys.list.path],
     queryFn: async () => {
-      if (isDemoMode) return DEMO_BUSINESSES[0].surveys;
+      if (isInDemoMode()) return DEMO_BUSINESSES[0].surveys;
       const res = await apiRequest("GET", api.surveys.list.path);
       return api.surveys.list.responses[200].parse(await res.json());
     },

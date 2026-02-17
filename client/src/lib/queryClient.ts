@@ -14,7 +14,8 @@ import {
   DEMO_NOTIFICATIONS,
   DEMO_STORIES,
   DEMO_COMMENTS,
-  DEMO_WALKTHROUGH
+  DEMO_WALKTHROUGH,
+  isInDemoMode
 } from "./demo-data";
 
 export async function apiRequest(
@@ -22,9 +23,7 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
-
-  if (isDemoMode) {
+  if (isInDemoMode()) {
     console.log(`[DEMO MODE] Intercepting ${method} ${url}`);
 
     let responseData: any = null;
@@ -79,9 +78,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
     async ({ queryKey }) => {
       const url = queryKey.join("/") as string;
-      const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
-
-      if (isDemoMode && url.startsWith("/api")) {
+      if (isInDemoMode() && url.startsWith("/api")) {
         console.log(`[DEMO MODE] Intercepting GET ${url}`);
 
         let responseData: any = null;

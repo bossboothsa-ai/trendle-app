@@ -1,7 +1,14 @@
-
-// ============================================
 // TRENDLE DEMO SHOWCASE DATA
 // ============================================
+
+export const isInDemoMode = () => {
+    if (typeof window === "undefined") return false;
+    const isDemoHost =
+        window.location.hostname.includes("github.io") ||
+        window.location.hostname.includes("localhost") ||
+        window.location.hostname.includes("onrender.com");
+    return localStorage.getItem("TRENDLE_DEMO_MODE") === "true" || isDemoHost;
+};
 
 export const DEMO_USERS = [
     {
