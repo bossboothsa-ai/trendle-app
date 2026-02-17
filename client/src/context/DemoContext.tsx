@@ -17,10 +17,12 @@ const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
     const [isDemoMode, setIsDemoMode] = useState(() => {
-        // Priority: 1. Query Param, 2. Local Storage
+        // Priority: 1. Query Param, 2. GitHub Pages Detection, 3. Local Storage
         const params = new URLSearchParams(window.location.search);
         const demoParam = params.get("demo") === "true";
-        if (demoParam) {
+        const isGitHubPages = window.location.hostname.includes("github.io");
+
+        if (demoParam || isGitHubPages) {
             localStorage.setItem("TRENDLE_DEMO_MODE", "true");
             return true;
         }
