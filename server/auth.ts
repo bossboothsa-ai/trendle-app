@@ -8,13 +8,21 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail } from "./email";
 import { z } from "zod";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
+
+const PostgresStore = connectPg(session);
 
 export function setupAuth(app: Express) {
     const sessionSettings: session.SessionOptions = {
         secret: process.env.SESSION_SECRET || "trendle_secret_key",
         resave: false,
         saveUninitialized: false,
-        store: undefined, // MemoryStore by default
+        store: new PostgresStore({
+            pool,
+            tableName: "sessions",
+            createTableIfMissing: true,
+        }),
         cookie: {
             secure: process.env.NODE_ENV === "production",
             maxAge: 24 * 60 * 60 * 1000 // 1 day
