@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/BottomNav";
 import { StoryRail } from "@/components/StoryRail";
 import { PostCard } from "@/components/PostCard";
 import { SuggestedUsers } from "@/components/SuggestedUsers";
@@ -92,7 +91,6 @@ export default function Home() {
         </div>
       </main>
 
-      <BottomNav />
     </div>
   );
 }
