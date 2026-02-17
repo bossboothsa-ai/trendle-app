@@ -21,12 +21,6 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-            {isDemoMode && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] bg-black/80 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-2xl flex items-center gap-2 pointer-events-none animate-bounce">
-                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                    ✨ Trendle Live Preview
-                </div>
-            )}
             {/* Main Content Area */}
             <main className="max-w-md mx-auto min-h-screen bg-white shadow-xl overflow-hidden relative">
                 {children}
