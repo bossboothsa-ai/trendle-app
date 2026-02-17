@@ -62,6 +62,7 @@ export const DEMO_USERS = [
     },
     {
         id: 105,
+        username: "kevin_pulse",
         displayName: "Kevin 'Pulse' Smith",
         avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80",
         bio: "Chasing the best beats and the coolest bars. Resident at Sunsets CT. 🎧🍸",
@@ -174,7 +175,7 @@ export const DEMO_BUSINESSES = [
             "https://images.unsplash.com/photo-1497933321162-041002ee3c0e?w=600&q=80"
         ],
         activeRewards: [
-            { id: 201, title: "Free Flat White", description: "Enjoy a complimentary signature flat white on your 5th visit.", cost: 250, category: "product", image: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?w=400&q=80", placeId: 1, locked: false },
+            { id: 201, title: "Free Flat White", description: "Enjoy a complimentary signature flat white on your 5th visit.", cost: 250, category: "product", image: "https://images.unsplash.com/photo-1574313217646-e570f806938b?w=400&q=80", placeId: 1, locked: false },
             { id: 202, title: "Origin Beans (250g)", description: "Take the taste of Origin home with a bag of our best beans.", cost: 1200, category: "product", image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=80", placeId: 1, locked: false },
             { id: 203, title: "Brewing Workshop", description: "Master the V60 and AeroPress with our lead roaster.", cost: 5000, category: "experience", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80", placeId: 1, locked: true }
         ],
@@ -348,7 +349,7 @@ export const DEMO_WALKTHROUGH = {
             { id: 9, type: "cashout", amount: 500, description: "Bank Transfer Payout", status: "pending", date: new Date(Date.now() - 3600000).toISOString() }
         ],
         redemptions: [
-            { id: 1, title: "Free Flat White", points: 250, status: "completed", date: "Last week", image: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?w=400&q=80" },
+            { id: 1, title: "Free Flat White", points: 250, status: "completed", date: "Last week", image: "https://images.unsplash.com/photo-1574313217646-e570f806938b?w=400&q=80" },
             { id: 2, title: "Glass of MCC", points: 500, status: "completed", date: "Last month", image: "https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?w=400&q=80" },
             { id: 3, title: "Artisan Chocolate Box", points: 600, status: "completed", date: "2 months ago", image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?w=400&q=80" },
             { id: 4, title: "Neighborhood Pint", points: 400, status: "pending", date: "Today", image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&q=80" }
