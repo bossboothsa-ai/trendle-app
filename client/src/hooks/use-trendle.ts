@@ -266,9 +266,9 @@ export function useRewards() {
   return useQuery({
     queryKey: [api.rewards.list.path],
     queryFn: async () => {
-      if (isInDemoMode()) return DEMO_BUSINESSES[0].activeRewards;
       const res = await apiRequest("GET", api.rewards.list.path);
-      return api.rewards.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 }
@@ -369,9 +369,9 @@ export function useSurveys() {
   return useQuery({
     queryKey: [api.surveys.list.path],
     queryFn: async () => {
-      if (isInDemoMode()) return DEMO_BUSINESSES[0].surveys;
       const res = await apiRequest("GET", api.surveys.list.path);
-      return api.surveys.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 }

@@ -57,8 +57,15 @@ export async function apiRequest(
     else if (cleanUrl.includes("/api/points/history")) responseData = DEMO_WALKTHROUGH.wallet.history;
     else if (cleanUrl.includes("/api/points/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
     else if (cleanUrl.includes("/api/rewards")) {
-      const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
-      responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.activeRewards || DEMO_BUSINESSES[0].activeRewards;
+      const searchParams = new URLSearchParams(url.split('?')[1]);
+      const placeIdStr = searchParams.get("placeId");
+      if (placeIdStr) {
+        const placeId = parseInt(placeIdStr);
+        responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.activeRewards || [];
+      } else {
+        // Global Rewards Vault - show ALL rewards
+        responseData = DEMO_BUSINESSES.flatMap(b => b.activeRewards);
+      }
     }
     else if (cleanUrl.includes("/api/surveys")) {
       const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
@@ -135,8 +142,14 @@ export const getQueryFn: <T>(options: {
         else if (cleanUrl.includes("/api/points/history")) responseData = DEMO_WALKTHROUGH.wallet.history;
         else if (cleanUrl.includes("/api/points/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
         else if (cleanUrl.includes("/api/rewards")) {
-          const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");
-          responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.activeRewards || DEMO_BUSINESSES[0].activeRewards;
+          const searchParams = new URLSearchParams(url.split('?')[1]);
+          const placeIdStr = searchParams.get("placeId");
+          if (placeIdStr) {
+            const placeId = parseInt(placeIdStr);
+            responseData = DEMO_BUSINESSES.find(b => b.id === placeId)?.activeRewards || [];
+          } else {
+            responseData = DEMO_BUSINESSES.flatMap(b => b.activeRewards);
+          }
         }
         else if (cleanUrl.includes("/api/surveys")) {
           const placeId = parseInt(new URLSearchParams(url.split('?')[1]).get("placeId") || "1");

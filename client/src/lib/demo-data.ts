@@ -342,15 +342,20 @@ export const DEMO_WALKTHROUGH = {
             { id: 3, type: "earned", amount: 25, description: "Task: Morning Ritual", status: "completed", date: new Date(Date.now() - 172800000).toISOString() },
             { id: 4, type: "earned", amount: 500, description: "Trendsetter Achievement Bonus", status: "completed", date: new Date(Date.now() - 604800000).toISOString() },
             { id: 5, type: "earned", amount: 150, description: "Verified Moment Reward", status: "completed", date: new Date(Date.now() - 1209600000).toISOString() },
-            { id: 6, type: "redeemed", amount: 250, description: "Free Flat White - Origin", status: "completed", date: new Date(Date.now() - 1500000).toISOString() },
-            { id: 7, type: "cashout", amount: 500, description: "Bank Transfer Payout", status: "pending", date: new Date(Date.now() - 3600000).toISOString() }
+            { id: 6, type: "earned", amount: 200, description: "Referral Bonus: Invited Sarah", status: "completed", date: new Date(Date.now() - 2592000000).toISOString() },
+            { id: 7, type: "redeemed", amount: 250, description: "Free Flat White - Origin", status: "completed", date: new Date(Date.now() - 1500000).toISOString() },
+            { id: 8, type: "redeemed", amount: 500, description: "Glass of MCC - Test Kitchen", status: "completed", date: new Date(Date.now() - 432000000).toISOString() },
+            { id: 9, type: "cashout", amount: 500, description: "Bank Transfer Payout", status: "pending", date: new Date(Date.now() - 3600000).toISOString() }
         ],
         redemptions: [
-            { id: 1, title: "Free Flat White", points: 250, status: "completed", date: "Last week" },
-            { id: 2, title: "Glass of MCC", points: 500, status: "pending", date: "Today" }
+            { id: 1, title: "Free Flat White", points: 250, status: "completed", date: "Last week", image: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?w=400&q=80" },
+            { id: 2, title: "Glass of MCC", points: 500, status: "completed", date: "Last month", image: "https://images.unsplash.com/photo-1578911373434-0cb395d2cbfb?w=400&q=80" },
+            { id: 3, title: "Artisan Chocolate Box", points: 600, status: "completed", date: "2 months ago", image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?w=400&q=80" },
+            { id: 4, title: "Neighborhood Pint", points: 400, status: "pending", date: "Today", image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&q=80" }
         ],
         cashouts: [
-            { id: 1, amount: 500, type: "bank", status: "pending", createdAt: new Date(Date.now() - 3600000).toISOString() }
+            { id: 1, amount: 500, type: "bank", status: "pending", createdAt: new Date(Date.now() - 3600000).toISOString() },
+            { id: 2, amount: 1000, type: "mobile", status: "completed", createdAt: new Date(Date.now() - 1209600000).toISOString() }
         ]
     }
 };
