@@ -38,9 +38,10 @@ export function useUser(id?: number) {
   return useQuery({
     queryKey: key,
     queryFn: async () => {
-      if (isInDemoMode()) return DEMO_USERS[0];
       const res = await apiRequest("GET", path);
-      return (id ? api.users.get.responses[200] : api.users.me.responses[200]).parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return (id ? api.users.get.responses[200] : api.users.me.responses[200]).parse(data);
     },
   });
 }
@@ -57,9 +58,10 @@ export function usePlaces() {
   return useQuery({
     queryKey: [api.places.list.path],
     queryFn: async () => {
-      if (isInDemoMode()) return DEMO_BUSINESSES;
       const res = await apiRequest("GET", api.places.list.path);
-      return api.places.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.places.list.responses[200].parse(data);
     },
   });
 }
@@ -69,10 +71,11 @@ export function usePlace(id: number) {
   return useQuery({
     queryKey: [api.places.get.path, id],
     queryFn: async () => {
-      if (isDemoMode) return DEMO_BUSINESSES.find(b => b.id === id) || DEMO_BUSINESSES[0];
       const url = buildUrl(api.places.get.path, { id });
       const res = await apiRequest("GET", url);
-      return api.places.get.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return api.places.get.responses[200].parse(data);
     },
     enabled: !!id,
   });
@@ -96,7 +99,9 @@ export function usePosts(filter?: 'all' | 'following' | 'foryou', placeId?: stri
 
       const url = `${api.posts.list.path}?${params.toString()}`;
       const res = await apiRequest("GET", url);
-      return api.posts.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.posts.list.responses[200].parse(data);
     },
     refetchInterval: isInDemoMode() ? false : 15000,
   });
@@ -107,9 +112,10 @@ export function useSuggestedUsers() {
   return useQuery({
     queryKey: [api.users.suggested.path],
     queryFn: async () => {
-      if (isInDemoMode()) return DEMO_USERS.slice(1, 6);
       const res = await apiRequest("GET", api.users.suggested.path);
-      return api.users.suggested.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.users.suggested.responses[200].parse(data);
     }
   });
 }
@@ -311,7 +317,9 @@ export function useNotifications() {
     queryKey: [api.notifications.list.path],
     queryFn: async () => {
       const res = await apiRequest("GET", api.notifications.list.path);
-      return api.notifications.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.notifications.list.responses[200].parse(data);
     },
     refetchInterval: 10000,
   });
@@ -327,7 +335,9 @@ export function useComments(postId: number) {
     queryFn: async () => {
       const url = buildUrl(api.comments.list.path, { postId });
       const res = await apiRequest("GET", url);
-      return api.comments.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.comments.list.responses[200].parse(data);
     },
   });
 }
@@ -414,7 +424,9 @@ export function useDailyTasks() {
     queryKey: [api.dailyTasks.list.path],
     queryFn: async () => {
       const res = await apiRequest("GET", api.dailyTasks.list.path);
-      return api.dailyTasks.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.dailyTasks.list.responses[200].parse(data);
     },
   });
 }
@@ -457,7 +469,9 @@ export function useStories() {
     queryKey: [api.stories.list.path],
     queryFn: async () => {
       const res = await apiRequest("GET", api.stories.list.path);
-      return api.stories.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.stories.list.responses[200].parse(data);
     },
   });
 }
@@ -468,7 +482,9 @@ export function useUserStories(userId: number) {
     queryFn: async () => {
       const url = buildUrl(api.stories.user.path, { userId });
       const res = await apiRequest("GET", url);
-      return api.stories.user.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.stories.user.responses[200].parse(data);
     },
     enabled: !!userId,
   });
@@ -562,7 +578,9 @@ export function useTransactions() {
     queryKey: [api.wallet.transactions.path],
     queryFn: async () => {
       const res = await apiRequest("GET", api.wallet.transactions.path);
-      return api.wallet.transactions.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.wallet.transactions.responses[200].parse(data);
     },
     refetchInterval: 10000,
   });
@@ -573,7 +591,9 @@ export function useCashouts() {
     queryKey: [api.wallet.cashouts.list.path],
     queryFn: async () => {
       const res = await apiRequest("GET", api.wallet.cashouts.list.path);
-      return api.wallet.cashouts.list.responses[200].parse(await res.json());
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.wallet.cashouts.list.responses[200].parse(data);
     },
     refetchInterval: 15000,
   });
