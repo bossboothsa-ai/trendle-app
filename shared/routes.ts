@@ -156,6 +156,24 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/posts/:id' as const,
+      input: insertPostSchema.partial(),
+      responses: {
+        200: z.custom<typeof posts.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/posts/:id' as const,
+      responses: {
+        204: z.null(),
+        404: errorSchemas.notFound,
+      },
+    },
     like: {
       method: 'POST' as const,
       path: '/api/posts/:id/like' as const,

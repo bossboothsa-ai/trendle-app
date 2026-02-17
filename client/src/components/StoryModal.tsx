@@ -14,7 +14,6 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        console.log('Escape pressed, calling onClose');
         onClose();
       } else if (e.key === "ArrowRight") {
         next();
@@ -43,7 +42,6 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
           <p className="text-gray-400">This user has no stories to display</p>
           <button
             onClick={() => {
-              console.log('Close button clicked in empty state');
               onClose();
             }}
             className="mt-4 px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/80 transition-colors"
@@ -63,7 +61,6 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      console.log('Last story viewed, calling onClose');
       onClose();
     }
   };
@@ -78,7 +75,6 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
     <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center">
       {/* Background click to close */}
       <div className="absolute inset-0" onClick={() => {
-        console.log('Background clicked, calling onClose');
         onClose();
       }} />
 
@@ -109,7 +105,6 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              console.log('X button clicked, calling onClose');
               onClose();
             }}
             className="p-2 rounded-full hover:bg-white/10 transition-colors pointer-events-auto"
@@ -125,10 +120,10 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
               <div
                 key={index}
                 className={`flex-1 h-1 rounded-full transition-all duration-300 ${index < currentIndex
-                    ? "bg-white"
-                    : index === currentIndex
-                      ? "bg-primary"
-                      : "bg-white/30"
+                  ? "bg-white"
+                  : index === currentIndex
+                    ? "bg-primary"
+                    : "bg-white/30"
                   }`}
               />
             ))}

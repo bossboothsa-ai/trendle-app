@@ -16,7 +16,7 @@ export function StoryRail() {
     if (!userStoriesMap.has(story.userId)) {
       userStoriesMap.set(story.userId, []);
     }
-    userStoriesMap.get(story.userId)?.push(story);
+    userStoriesMap.get(story.userId)?.push(story as any);
   });
 
   // Get unique users with stories
@@ -29,7 +29,6 @@ export function StoryRail() {
     };
   });
 
-  console.log('Unique users:', uniqueUsers);
 
   return (
     <div className="w-full overflow-x-auto hide-scrollbar py-4 pl-4 space-x-4 flex items-start">
@@ -57,7 +56,6 @@ export function StoryRail() {
           key={storyUser.id}
           className="flex flex-col items-center gap-1 min-w-[64px] cursor-pointer group"
           onClick={() => {
-            console.log('Clicked on user:', storyUser.id);
             setSelectedUserId(storyUser.id);
           }}
         >

@@ -3,12 +3,14 @@ import { StoryRail } from "@/components/StoryRail";
 import { PostCard } from "@/components/PostCard";
 import { SuggestedUsers } from "@/components/SuggestedUsers";
 import { usePosts, useUser } from "@/hooks/use-trendle";
-import { Bell, Search, Loader2 } from "lucide-react";
+import { Bell, Search, Loader2, Briefcase } from "lucide-react";
 import { Link } from "wouter";
 import { useState, Fragment } from "react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
+  const { toast } = useToast();
   const [feedType, setFeedType] = useState<'foryou' | 'following'>('foryou');
   const { data: posts, isLoading } = usePosts(feedType);
   const { data: user } = useUser();
@@ -22,7 +24,13 @@ export default function Home() {
             Trendle
           </h1>
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-muted rounded-full transition-colors">
+            <Link href="/business/login" className="p-2 hover:bg-muted rounded-full transition-colors" title="Business Portal">
+              <Briefcase className="w-6 h-6 text-foreground" />
+            </Link>
+            <button
+              onClick={() => toast({ title: "Coming Soon", description: "Search feature is under development." })}
+              className="p-2 hover:bg-muted rounded-full transition-colors"
+            >
               <Search className="w-6 h-6 text-foreground" />
             </button>
             <Link href="/notifications" className="relative p-2 hover:bg-muted rounded-full transition-colors">
@@ -76,7 +84,7 @@ export default function Home() {
           ) : (
             posts?.map((post, index) => (
               <Fragment key={post.id}>
-                <PostCard post={post} />
+                <PostCard post={post as any} />
                 {index === 1 && feedType === 'foryou' && <SuggestedUsers />}
               </Fragment>
             ))

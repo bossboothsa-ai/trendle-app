@@ -1,13 +1,16 @@
 import { useUser, useUpdateUser, usePointsHistory, useRedemptionHistory } from "@/hooks/use-trendle";
 import { BottomNav } from "@/components/BottomNav";
-import { ChevronRight, Bell, Shield, User as UserIcon, Award, LogOut, Info, Trash2, Mail, Lock, Clock, Gift } from "lucide-react";
+import { ChevronRight, Bell, Shield, User as UserIcon, Award, LogOut, Info, Trash2, Mail, Lock, Clock, Gift, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
     <div className="mb-6">
@@ -54,9 +57,54 @@ export default function SettingsPage() {
     const { data: pointsHistory } = usePointsHistory();
     const { data: redemptions } = useRedemptionHistory();
     const [, setLocation] = useLocation();
+    const { toast } = useToast();
 
     const [viewHistory, setViewHistory] = useState<'points' | 'rewards' | null>(null);
     const [viewContent, setViewContent] = useState<'points-info' | 'help' | 'privacy' | null>(null);
+
+    // Email Edit State
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [newEmail, setNewEmail] = useState("");
+
+    // Password Change State
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        current: "",
+        new: "",
+        confirm: ""
+    });
+
+    // Privacy Select State
+    const [privacySelect, setPrivacySelect] = useState<'moments' | 'comments' | null>(null);
+
+    const handleUpdateEmail = () => {
+        if (!newEmail || !newEmail.includes("@")) {
+            toast({ title: "Invalid email", variant: "destructive" });
+            return;
+        }
+        updateUser.mutate({ id: user!.id, data: { email: newEmail } }, {
+            onSuccess: () => {
+                setIsEmailModalOpen(false);
+                toast({ title: "Verification required for new email", description: "Please check your inbox." });
+            }
+        });
+    };
+
+    const handleUpdatePassword = () => {
+        if (passwordData.new.length < 8) {
+            toast({ title: "Value too short", description: "Password must be at least 8 characters.", variant: "destructive" });
+            return;
+        }
+        if (passwordData.new !== passwordData.confirm) {
+            toast({ title: "Passwords mismatch", description: "New password and confirmation do not match.", variant: "destructive" });
+            return;
+        }
+
+        // Mocking a successful password update
+        toast({ title: "Password updated successfully" });
+        setIsPasswordModalOpen(false);
+        setPasswordData({ current: "", new: "", confirm: "" });
+    };
 
     return (
         <div className="min-h-screen bg-background pb-24">
@@ -69,10 +117,22 @@ export default function SettingsPage() {
 
             <main className="py-6">
                 <Section title="Account">
-                    <Item icon={Mail} label="Email" value={user?.email} />
-                    <Item icon={Lock} label="Change Password" />
+                    <Item
+                        icon={Mail}
+                        label="Email"
+                        value={user?.email}
+                        onClick={() => {
+                            setNewEmail(user?.email || "");
+                            setIsEmailModalOpen(true);
+                        }}
+                    />
+                    <Item
+                        icon={Lock}
+                        label="Change Password"
+                        onClick={() => setIsPasswordModalOpen(true)}
+                    />
                     <Item icon={LogOut} label="Log Out" danger onClick={() => setLocation("/")} />
-                    <Item icon={Trash2} label="Delete Account" danger />
+                    <Item icon={Trash2} label="Delete Account" danger onClick={() => toast({ title: "Coming soon", description: "Account deletion is being implemented." })} />
                 </Section>
 
                 <Section title="Notifications">
@@ -97,13 +157,37 @@ export default function SettingsPage() {
                 </Section>
 
                 <Section title="Privacy">
-                    <ToggleItem
+                    <div className="px-6 py-4 flex flex-col gap-1">
+                        <Label className="text-sm font-medium">Who can see my profile</Label>
+                        <div className="flex gap-2 mt-2">
+                            {['Public', 'Private'].map((option) => (
+                                <Button
+                                    key={option}
+                                    variant={user?.isPrivate === (option === 'Private') ? "default" : "outline"}
+                                    size="sm"
+                                    className="rounded-full h-8 text-xs px-4"
+                                    onClick={() => updateUser.mutate({ id: user!.id, data: { isPrivate: option === 'Private' } })}
+                                >
+                                    {option}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Item
                         icon={Shield}
-                        label="Private Account"
-                        checked={user?.isPrivate}
-                        onChange={(chk: boolean) => updateUser.mutate({ id: user!.id, data: { isPrivate: chk } })}
+                        label="Who can see my moments"
+                        value={user?.privacySettings?.canSeeMoments}
+                        onClick={() => setPrivacySelect('moments')}
                     />
-                    <Item icon={Shield} label="Who can see my moments" value={user?.privacySettings?.canSeeMoments} />
+
+                    <Item
+                        icon={Shield}
+                        label="Who can see my comments"
+                        value={user?.privacySettings?.canComment}
+                        onClick={() => setPrivacySelect('comments')}
+                    />
+
                     <ToggleItem
                         icon={Award}
                         label="Show my points publicly"
@@ -320,6 +404,124 @@ export default function SettingsPage() {
                                 <p className="text-xs text-muted-foreground pt-4 border-t border-border/50">Last Updated: February 2026. For privacy inquiries, contact <a href="mailto:privacy@trendle.app" className="underline">privacy@trendle.app</a>.</p>
                             </div>
                         )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
+                <DialogContent className="sm:max-w-md bg-background border-none shadow-2xl rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Update Email</DialogTitle>
+                        <DialogDescription>
+                            Enter your new email address. You will need to verify it.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                value={newEmail}
+                                onChange={(e) => setNewEmail(e.target.value)}
+                                placeholder="name@example.com"
+                                className="rounded-xl"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEmailModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleUpdateEmail} disabled={updateUser.isPending}>
+                            {updateUser.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Update Email
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+                <DialogContent className="sm:max-w-md bg-background border-none shadow-2xl rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Change Password</DialogTitle>
+                        <DialogDescription>
+                            Enter your current and new password.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="current">Current Password</Label>
+                            <Input
+                                id="current"
+                                type="password"
+                                value={passwordData.current}
+                                onChange={(e) => setPasswordData({ ...passwordData, current: e.target.value })}
+                                className="rounded-xl"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new">New Password</Label>
+                            <Input
+                                id="new"
+                                type="password"
+                                value={passwordData.new}
+                                onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })}
+                                className="rounded-xl"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm">Confirm Password</Label>
+                            <Input
+                                id="confirm"
+                                type="password"
+                                value={passwordData.confirm}
+                                onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })}
+                                className="rounded-xl"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleUpdatePassword}>Update Password</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!privacySelect} onOpenChange={() => setPrivacySelect(null)}>
+                <DialogContent className="sm:max-w-sm bg-background border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-0">
+                        <DialogTitle>
+                            {privacySelect === 'moments' ? "Who can see my moments" : "Who can see my comments"}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="p-2">
+                        {['everyone', 'followers', 'none'].map((option) => {
+                            const current = privacySelect === 'moments'
+                                ? user?.privacySettings?.canSeeMoments
+                                : user?.privacySettings?.canComment;
+
+                            return (
+                                <button
+                                    key={option}
+                                    className="w-full flex items-center justify-between p-4 hover:bg-muted/50 rounded-2xl transition-colors text-left"
+                                    onClick={() => {
+                                        const field = privacySelect === 'moments' ? 'canSeeMoments' : 'canComment';
+                                        updateUser.mutate({
+                                            id: user!.id,
+                                            data: {
+                                                privacySettings: {
+                                                    ...user!.privacySettings,
+                                                    [field]: option
+                                                }
+                                            }
+                                        });
+                                        setPrivacySelect(null);
+                                    }}
+                                >
+                                    <span className="capitalize font-medium">{option}</span>
+                                    {current === option && <Check className="w-5 h-5 text-primary" />}
+                                </button>
+                            );
+                        })}
                     </div>
                 </DialogContent>
             </Dialog>

@@ -86,7 +86,7 @@ export default function SurveysTasks() {
                     </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                      {survey.questions.map((question: any, index: number) => (
+                      {(survey.questions as any[]).map((question: any, index: number) => (
                         <div key={index} className="space-y-3">
                           <p className="font-display font-semibold text-lg">{index + 1}. {question.question}</p>
                           <div className="grid grid-cols-1 gap-2">
@@ -146,7 +146,7 @@ export default function SurveysTasks() {
                         onClick={handleSurveySubmit}
                         className="flex-1 rounded-xl py-6 text-lg font-bold shadow-lg shadow-primary/20 sm:order-2"
                         disabled={
-                          Object.keys(surveyAnswers).length < survey.questions.length ||
+                          Object.keys(surveyAnswers).length < (survey.questions as any[]).length ||
                           submitSurvey.isPending
                         }
                       >

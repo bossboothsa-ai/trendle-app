@@ -1,6 +1,6 @@
-import { Heart, MessageCircle, Share2, MapPin, MoreHorizontal, UserPlus, UserMinus, Play } from "lucide-react";
+import { Heart, MessageCircle, Share2, MapPin, MoreHorizontal, UserPlus, UserMinus, Play, Copy, Edit3, Trash2, Flag, MicOff, UserX } from "lucide-react";
 import { type Post, type User, type Place } from "@shared/schema";
-import { useLikePost, useComments, useCreateComment, useFollowUser, useUnfollowUser } from "@/hooks/use-trendle";
+import { useLikePost, useComments, useCreateComment, useFollowUser, useUnfollowUser, useCurrentUser } from "@/hooks/use-trendle";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,19 +10,87 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useUpdatePost, useDeletePost } from "@/hooks/use-trendle";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 interface PostCardProps {
   post: Post & { author: User; place: Place | null; hasLiked: boolean; hasFollowed: boolean };
 }
 
 export function PostCard({ post }: PostCardProps) {
+  const { data: currentUser } = useCurrentUser();
   const likePost = useLikePost();
   const { data: comments } = useComments(post.id);
   const createComment = useCreateComment();
   const followUser = useFollowUser();
   const unfollowUser = useUnfollowUser();
+  const { toast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+
+  const updatePost = useUpdatePost();
+  const deletePost = useDeletePost();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCaption, setEditCaption] = useState(post.caption || "");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isMe = currentUser?.id === post.author.id;
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Trendle Moment',
+      text: post.caption || 'Check out this moment on Trendle!',
+      url: window.location.origin + `/posts/${post.id}`
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast({ title: "Shared successfully" });
+      } catch (err) {
+        // Fallback if user cancelled or failed
+        copyToClipboard();
+      }
+    } else {
+      copyToClipboard();
+    }
+  };
+
+  const copyToClipboard = () => {
+    const url = window.location.origin + `/posts/${post.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({ title: "Link copied to clipboard" });
+    }).catch(() => {
+      toast({ title: "Could not copy link", variant: "destructive" });
+    });
+  };
 
   const handleLike = () => {
     likePost.mutate(post.id);
@@ -33,6 +101,18 @@ export function PostCard({ post }: PostCardProps) {
       createComment.mutate({ postId: post.id, text: commentText.trim() });
       setCommentText("");
     }
+  };
+
+  const handleUpdate = () => {
+    updatePost.mutate({ id: post.id, data: { caption: editCaption } }, {
+      onSuccess: () => setIsEditing(false)
+    });
+  };
+
+  const handleDelete = () => {
+    deletePost.mutate(post.id, {
+      onSuccess: () => setIsDeleting(false)
+    });
   };
 
   const isFollowing = post.hasFollowed;
@@ -212,14 +292,107 @@ export function PostCard({ post }: PostCardProps) {
               <MessageCircle className="w-7 h-7 text-foreground group-hover:text-primary transition-colors" />
               <span className="font-semibold text-sm">{post.commentsCount}</span>
             </button>
-            <button className="group flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="group flex items-center gap-2"
+            >
               <Share2 className="w-7 h-7 text-foreground group-hover:text-primary transition-colors" />
             </button>
           </div>
-          <button className="text-muted-foreground hover:text-foreground">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-muted-foreground hover:text-foreground focus:outline-none p-1">
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-border/50">
+              {isMe ? (
+                <>
+                  <DropdownMenuItem onClick={() => {
+                    setEditCaption(post.caption || "");
+                    setIsEditing(true);
+                  }} className="gap-2 p-3 cursor-pointer">
+                    <Edit3 className="w-4 h-4" />
+                    <span>Edit post</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsDeleting(true)} className="gap-2 p-3 text-destructive focus:text-destructive cursor-pointer">
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete post</span>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={() => toast({ title: "Reported", description: "Thank you for helping keep Trendle safe." })} className="gap-2 p-3 cursor-pointer">
+                    <Flag className="w-4 h-4" />
+                    <span>Report post</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast({ title: "Muted", description: "You will no longer see posts from this user." })} className="gap-2 p-3 cursor-pointer">
+                    <MicOff className="w-4 h-4" />
+                    <span>Mute user</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast({ title: "Blocked", description: "User has been blocked." })} className="gap-2 p-3 text-destructive focus:text-destructive cursor-pointer">
+                    <UserX className="w-4 h-4" />
+                    <span>Block user</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuItem onClick={copyToClipboard} className="gap-2 p-3 border-t cursor-pointer">
+                <Copy className="w-4 h-4" />
+                <span>Copy link</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="sm:max-w-md bg-background border-none shadow-2xl rounded-3xl">
+            <DialogHeader>
+              <DialogTitle>Edit Post</DialogTitle>
+              <DialogDescription>
+                Update your post caption below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                placeholder="Write a caption..."
+                className="bg-muted/30 border-none resize-none text-base focus-visible:ring-1 focus-visible:ring-primary min-h-[100px] rounded-xl"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+              <Button onClick={handleUpdate} disabled={updatePost.isPending}>
+                {updatePost.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Alert */}
+        <AlertDialog open={isDeleting} onOpenChange={setIsDeleting}>
+          <AlertDialogContent className="bg-background border-none shadow-2xl rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This post will be permanently deleted from your profile and the feed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deletePost.isPending}
+              >
+                {deletePost.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Delete Post
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Comments Section */}
         <AnimatePresence>

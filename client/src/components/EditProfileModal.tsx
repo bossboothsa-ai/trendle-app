@@ -38,7 +38,7 @@ export function EditProfileModal({ open, onOpenChange }: EditProfileModalProps) 
             setUsername(user.username);
             setDisplayName(user.displayName || "");
             setLocation(user.location || "");
-            setInterests(user.interests || []);
+            setInterests((user as any).interests || []);
             if (user.avatar) {
                 setAvatar([{ type: "image", url: user.avatar }]);
             }

@@ -1,10 +1,31 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { DEMO_USERS, DEMO_BUSINESSES, DEMO_POSTS, DEMO_NOTIFICATIONS } from "@/lib/demo-data";
 
 // ============================================
 // USERS & PROFILE
 // ============================================
+
+// DEV MODE MOCK DATA
+const DEV_USER = {
+  id: 1,
+  username: "dev_superuser",
+  displayName: "Dev Admin",
+  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=dev",
+  level: "Platinum",
+  points: 1000,
+  bio: "Superuser Account",
+  location: "Cape Town",
+  publicActivityId: "TRND-DEV001",
+  hasFollowed: false,
+  email: "dev@trendle.com",
+  notificationSettings: { likes: true, comments: true, follows: true },
+  privacySettings: { showPoints: true, canSeeMoments: "everyone", canComment: "everyone" },
+  isPrivate: false,
+  interests: ["coding", "coffee"]
+};
 
 export function useUser(id?: number) {
   // If no ID provided, we could use a 'me' endpoint or handle logic differently
@@ -12,11 +33,13 @@ export function useUser(id?: number) {
   const path = id ? buildUrl(api.users.get.path, { id }) : api.users.me.path;
   const key = id ? [api.users.get.path, id] : [api.users.me.path];
 
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
+
   return useQuery({
     queryKey: key,
     queryFn: async () => {
-      const res = await fetch(path);
-      if (!res.ok) throw new Error("Failed to fetch user");
+      if (isDemoMode) return DEMO_USERS[0];
+      const res = await apiRequest("GET", path);
       return (id ? api.users.get.responses[200] : api.users.me.responses[200]).parse(await res.json());
     },
   });
@@ -31,11 +54,12 @@ export function useCurrentUser() {
 // ============================================
 
 export function usePlaces() {
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.places.list.path],
     queryFn: async () => {
-      const res = await fetch(api.places.list.path);
-      if (!res.ok) throw new Error("Failed to fetch places");
+      if (isDemoMode) return DEMO_BUSINESSES;
+      const res = await apiRequest("GET", api.places.list.path);
       return api.places.list.responses[200].parse(await res.json());
     },
   });
@@ -59,9 +83,12 @@ export function usePlace(id: number) {
 // ============================================
 
 export function usePosts(filter?: 'all' | 'following' | 'foryou', placeId?: string, userId?: number) {
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.posts.list.path, { filter, placeId, userId }],
     queryFn: async () => {
+      if (isDemoMode) return DEMO_POSTS;
+
       // Build query params
       const params = new URLSearchParams();
       if (filter) params.append("filter", filter);
@@ -69,20 +96,21 @@ export function usePosts(filter?: 'all' | 'following' | 'foryou', placeId?: stri
       if (userId) params.append("userId", userId.toString());
 
       const url = `${api.posts.list.path}?${params.toString()}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch posts");
+      const res = await apiRequest("GET", url);
       return api.posts.list.responses[200].parse(await res.json());
     },
-    refetchInterval: 15000, // Polling for simulated realtime activity
+    refetchInterval: isDemoMode ? false : 15000,
   });
 }
 
+
 export function useSuggestedUsers() {
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.users.suggested.path],
     queryFn: async () => {
-      const res = await fetch(api.users.suggested.path);
-      if (!res.ok) throw new Error("Failed to fetch suggested users");
+      if (isDemoMode) return DEMO_USERS.slice(1, 6);
+      const res = await apiRequest("GET", api.users.suggested.path);
       return api.users.suggested.responses[200].parse(await res.json());
     }
   });
@@ -128,7 +156,6 @@ export function useUnfollowUser() {
       toast({
         title: "Unfollowed",
         description: "You've stopped following this user.",
-        className: "bg-secondary text-white border-none",
       });
     },
   });
@@ -168,6 +195,59 @@ export function useCreatePost() {
   });
 }
 
+export function useUpdatePost() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const url = buildUrl(api.posts.update.path, { id });
+      const res = await fetch(url, {
+        method: api.posts.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update post");
+      return api.posts.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.posts.list.path] });
+      toast({
+        title: "Post Updated",
+        description: "Your changes have been saved.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Update Failed", description: error.message, variant: "destructive" });
+    }
+  });
+}
+
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.posts.delete.path, { id });
+      const res = await fetch(url, { method: api.posts.delete.method });
+      if (!res.ok) throw new Error("Failed to delete post");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.posts.list.path] });
+      toast({
+        title: "Post Deleted",
+        description: "Your post has been removed.",
+        className: "bg-destructive text-white border-none",
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Delete Failed", description: error.message, variant: "destructive" });
+    }
+  });
+}
+
 export function useLikePost() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -199,11 +279,12 @@ export function useLikePost() {
 // ============================================
 
 export function useRewards() {
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.rewards.list.path],
     queryFn: async () => {
-      const res = await fetch(api.rewards.list.path);
-      if (!res.ok) throw new Error("Failed to fetch rewards");
+      if (isDemoMode) return DEMO_BUSINESSES[0].activeRewards;
+      const res = await apiRequest("GET", api.rewards.list.path);
       return api.rewards.list.responses[200].parse(await res.json());
     },
   });
@@ -313,11 +394,12 @@ export function useCreateComment() {
 // ============================================
 
 export function useSurveys() {
+  const isDemoMode = localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
   return useQuery({
     queryKey: [api.surveys.list.path],
     queryFn: async () => {
-      const res = await fetch(api.surveys.list.path);
-      if (!res.ok) throw new Error("Failed to fetch surveys");
+      if (isDemoMode) return DEMO_BUSINESSES[0].surveys;
+      const res = await apiRequest("GET", api.surveys.list.path);
       return api.surveys.list.responses[200].parse(await res.json());
     },
   });
@@ -368,6 +450,39 @@ export function useDailyTasks() {
   return useQuery({
     queryKey: [api.dailyTasks.list.path],
     queryFn: async () => {
+      // DEV MODE MOCK
+      if (process.env.NODE_ENV === "development") {
+        return [
+          {
+            id: 1,
+            title: "Coffee Check-in",
+            description: "Check in at a Coffee Shop",
+            points: 50,
+            completed: false,
+            type: "checkin",
+            placeId: null,
+            active: true,
+            startDate: null,
+            endDate: null,
+            maxParticipants: null,
+            verificationMethod: "QR Verified"
+          },
+          {
+            id: 2,
+            title: "Share Moment",
+            description: "Post a Moment",
+            points: 40,
+            completed: true,
+            type: "post",
+            placeId: null,
+            active: true,
+            startDate: null,
+            endDate: null,
+            maxParticipants: null,
+            verificationMethod: "QR Verified"
+          }
+        ];
+      }
       const res = await fetch(api.dailyTasks.list.path);
       if (!res.ok) throw new Error("Failed to fetch daily tasks");
       return api.dailyTasks.list.responses[200].parse(await res.json());
@@ -416,6 +531,19 @@ export function useStories() {
   return useQuery({
     queryKey: [api.stories.list.path],
     queryFn: async () => {
+      // DEV MODE MOCK
+      if (process.env.NODE_ENV === "development") {
+        return [
+          {
+            id: 1,
+            userId: 1,
+            user: DEV_USER,
+            media: [{ type: 'image', url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80" }],
+            createdAt: new Date().toISOString(),
+            caption: "My story caption"
+          }
+        ];
+      }
       const res = await fetch(api.stories.list.path);
       if (!res.ok) throw new Error("Failed to fetch stories");
       return api.stories.list.responses[200].parse(await res.json());
@@ -435,6 +563,8 @@ export function useUserStories(userId: number) {
     enabled: !!userId,
   });
 }
+
+// (useCreatePost, useUpdatePost, useDeletePost removed from here)
 
 export function useCreateStory() {
   const queryClient = useQueryClient();
@@ -507,6 +637,13 @@ export function usePointsHistory() {
   return useQuery({
     queryKey: [api.users.pointsHistory.path],
     queryFn: async () => {
+      // DEV MODE MOCK
+      if (process.env.NODE_ENV === "development") {
+        return [
+          { id: 1, userId: 1, amount: 50, reason: "Check-in at Truth Coffee", createdAt: new Date().toISOString() },
+          { id: 2, userId: 1, amount: 10, reason: "Daily login", createdAt: new Date(Date.now() - 86400000).toISOString() }
+        ];
+      }
       const res = await fetch(api.users.pointsHistory.path);
       if (!res.ok) throw new Error("Failed to fetch points history");
       return api.users.pointsHistory.responses[200].parse(await res.json());
@@ -518,6 +655,19 @@ export function useRedemptionHistory() {
   return useQuery({
     queryKey: [api.users.redemptionHistory.path],
     queryFn: async () => {
+      // DEV MODE MOCK
+      if (process.env.NODE_ENV === "development") {
+        return [
+          {
+            id: 1,
+            userId: 1,
+            rewardId: 1,
+            pointsCost: 500,
+            redeemedAt: new Date().toISOString(),
+            reward: { title: "Test Reward", description: "Free Coffee" }
+          }
+        ];
+      }
       const res = await fetch(api.users.redemptionHistory.path);
       if (!res.ok) throw new Error("Failed to fetch redemption history");
       return api.users.redemptionHistory.responses[200].parse(await res.json());

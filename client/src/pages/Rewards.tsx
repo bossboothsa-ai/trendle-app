@@ -49,7 +49,12 @@ export default function Rewards() {
           <h1 className="font-display font-extrabold text-2xl tracking-tight text-foreground">Rewards Vault</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full h-10 w-10"
+            onClick={() => toast({ title: "Coming Soon", description: "Search filtering for rewards is being implemented." })}
+          >
             <Search className="w-5 h-5 text-muted-foreground" />
           </Button>
         </div>

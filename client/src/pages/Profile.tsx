@@ -76,6 +76,11 @@ export default function Profile() {
 
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold font-display">{user?.username}</h2>
+              {user?.publicActivityId && (
+                <div className="inline-flex items-center gap-1 px-2 py-1 bg-muted/50 rounded-md text-xs font-mono text-muted-foreground">
+                  ID: {user.publicActivityId}
+                </div>
+              )}
               <p className="text-sm text-muted-foreground max-w-md">{user?.bio || "No bio yet."}</p>
             </div>
 
@@ -152,7 +157,7 @@ export default function Profile() {
             </h3>
           </div>
           {myPosts.map(post => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post as any} />
           ))}
           {myPosts.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">

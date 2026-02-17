@@ -2,11 +2,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreatePost, usePlaces } from "@/hooks/use-trendle";
-import { useState } from "react";
-import { MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Loader2, Navigation } from "lucide-react";
 import { useUser } from "@/hooks/use-trendle";
 import { cn } from "@/lib/utils";
 import { MediaUploader } from "@/components/MediaUploader";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -27,6 +29,34 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [caption, setCaption] = useState("");
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number; name: string; timestamp: string } | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              name: "Near you",
+              timestamp: new Date().toISOString()
+            });
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            toast({
+              title: "Location Unverified",
+              description: "Location improves reward validation. Please enable GPS.",
+              variant: "destructive"
+            });
+          },
+          { enableHighAccuracy: true }
+        );
+      }
+    }
+  }, [open, toast]);
 
   const handleSubmit = () => {
     if (!user || media.length === 0) return;
@@ -36,6 +66,10 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
       placeId: selectedPlaceId,
       media: media.map(m => ({ type: m.type, url: m.url })),
       caption: caption,
+      latitude: location?.lat?.toString(),
+      longitude: location?.lng?.toString(),
+      locationName: location?.name,
+      locationTimestamp: location?.timestamp
     }, {
       onSuccess: () => {
         onOpenChange(false);
@@ -43,6 +77,7 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
         setMedia([]);
         setCaption("");
         setSelectedPlaceId(null);
+        setLocation(null);
       }
     });
   };
@@ -111,15 +146,24 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
                 </button>
               ))}
             </div>
-          </div>
+            {location && (
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider gap-1 animate-in fade-in slide-in-from-left-2">
+                  <Navigation className="w-3 h-3 fill-current" />
+                  {location.name}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground italic">GPS Verified</span>
+              </div>
+            )}
 
-          <Button
-            onClick={handleSubmit}
-            disabled={createPost.isPending || media.length === 0}
-            className="w-full py-6 rounded-xl font-bold text-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-          >
-            {createPost.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Share Moment"}
-          </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={createPost.isPending || media.length === 0}
+              className="w-full py-6 rounded-xl font-bold text-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+            >
+              {createPost.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Share Moment"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
