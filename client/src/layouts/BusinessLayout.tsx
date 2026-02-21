@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, Users, BarChart3, Settings, LogOut, Camera, FileText, CheckSquare, Gift, CreditCard, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Store, Users, BarChart3, Settings, LogOut, Camera, FileText, CheckSquare, Gift, CreditCard, HelpCircle, CalendarDays } from "lucide-react";
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ export default function BusinessLayout({ children }: BusinessLayoutProps) {
 
     const navItems = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/business/dashboard" },
+        { icon: CalendarDays, label: "Events", path: "/business/events" },
         { icon: Camera, label: "Moments", path: "/business/moments" },
         { icon: FileText, label: "Surveys", path: "/business/surveys" },
         { icon: CheckSquare, label: "Tasks", path: "/business/tasks" },

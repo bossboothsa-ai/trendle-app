@@ -56,6 +56,13 @@ const DEV_USER: User = {
         canComment: "everyone",
     },
     createdAt: new Date(),
+    // Host fields
+    isHost: false,
+    hostName: null,
+    hostBio: null,
+    hostAvatar: null,
+    hostVerified: false,
+    hostCreatedAt: null,
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {

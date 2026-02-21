@@ -1,11 +1,14 @@
-import { useUser, usePosts, useFollowUser, useUnfollowUser, useCurrentUser } from "@/hooks/use-trendle";
-import { Settings, Edit3, Award, MapPin, Gift, UserPlus, UserMinus, ChevronLeft } from "lucide-react";
+import { useUser, usePosts, useFollowUser, useUnfollowUser, useCurrentUser, useHostEvents } from "@/hooks/use-trendle";
+import { Settings, Edit3, Award, MapPin, Gift, UserPlus, UserMinus, ChevronLeft, Crown, Sparkles, Calendar, Users } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/EditProfileModal";
+import { HostUpgradeModal } from "@/components/HostUpgradeModal";
+import { CreateHostEventModal } from "@/components/CreateHostEventModal";
 import { Link, useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export default function Profile() {
   const params = useParams();
@@ -17,14 +20,21 @@ export default function Profile() {
 
   const { data: user, isLoading: userLoading } = useUser(profileId);
   const { data: posts, isLoading: postsLoading } = usePosts('all', undefined, profileId || currentUser?.id);
+  const { data: hostEvents } = useHostEvents();
 
   const followUser = useFollowUser();
   const unfollowUser = useUnfollowUser();
 
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showHostUpgrade, setShowHostUpgrade] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const myPosts = posts || [];
   const isFollowing = user?.hasFollowed;
+
+  // Calculate host stats
+  const totalEventsHosted = hostEvents?.length || 0;
+  const totalAttendees = hostEvents?.reduce((sum, event) => sum + (event.attendeesCount || 0), 0) || 0;
 
   if (userLoading || postsLoading) {
     return (
@@ -75,6 +85,20 @@ export default function Profile() {
 
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold font-display">{user?.username}</h2>
+              {user?.isHost && (
+                <div className="flex items-center justify-center gap-2">
+                  <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Social Host
+                  </Badge>
+                  {user?.hostVerified && (
+                    <Badge variant="secondary" className="bg-blue-500/20 text-blue-600">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Verified Host
+                    </Badge>
+                  )}
+                </div>
+              )}
               {user?.publicActivityId && (
                 <div className="inline-flex items-center gap-1 px-2 py-1 bg-muted/50 rounded-md text-xs font-mono text-muted-foreground">
                   ID: {user.publicActivityId}
@@ -92,7 +116,11 @@ export default function Profile() {
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 w-full pt-4 border-t border-border/50">
+            <div className="grid grid-cols-5 gap-4 w-full pt-4 border-t border-border/50">
+              <div className="text-center">
+                <div className="font-bold text-xl">{user?.points || 0}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">Points</div>
+              </div>
               <div className="text-center">
                 <div className="font-bold text-xl">127</div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
@@ -104,23 +132,67 @@ export default function Profile() {
                 <div className="font-bold text-xl">{myPosts.length}</div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wider">Moments</div>
               </div>
-              <div className="text-center">
-                <div className="font-bold text-xl">12</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
-                  <Gift className="w-3 h-3" />
-                  Rewards
-                </div>
-              </div>
+              {user?.isHost && (
+                <>
+                  <div className="text-center">
+                    <div className="font-bold text-xl">{totalEventsHosted}</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      Events
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-xl">{totalAttendees}</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
+                      <Users className="w-3 h-3" />
+                      Attendees
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {isMe ? (
-              <button
-                onClick={() => setShowEditProfile(true)}
-                className="mt-4 flex items-center gap-2 px-8 py-3 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors w-full justify-center"
-              >
-                <Edit3 className="w-4 h-4" />
-                Edit Profile
-              </button>
+              <div className="space-y-3 w-full">
+                {/* Host Actions - Show if user is a host */}
+                {currentUser?.isHost && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={() => setShowCreateEvent(true)}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent hover:opacity-90 rounded-full text-sm font-medium w-full justify-center"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Create Event
+                    </Button>
+                    <Link
+                      href="/host"
+                      className="flex items-center gap-2 px-6 py-3 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors w-full justify-center"
+                    >
+                      <Crown className="w-4 h-4 text-muted-foreground" />
+                      Host Dashboard
+                    </Link>
+                  </div>
+                )}
+
+                {/* Host Upgrade Button - Show if not already a host */}
+                {!currentUser?.isHost && (
+                  <button
+                    onClick={() => setShowHostUpgrade(true)}
+                    className="mt-4 flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full text-sm font-medium hover:from-yellow-500/30 hover:to-orange-500/30 transition-colors w-full justify-center"
+                  >
+                    <Crown className="w-4 h-4 text-yellow-600" />
+                    Become a Host
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="flex items-center gap-2 px-8 py-3 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors w-full justify-center"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit Profile
+                </button>
+              </div>
             ) : (
               <Button
                 variant={isFollowing ? "outline" : "default"}
@@ -166,6 +238,9 @@ export default function Profile() {
         </div>
       </main>
 
-      <EditProfileModal open={showEditProfile} onOpenChange={setShowEditProfile} />    </div>
+      <EditProfileModal open={showEditProfile} onOpenChange={setShowEditProfile} />
+      <HostUpgradeModal open={showHostUpgrade} onOpenChange={setShowHostUpgrade} />
+      <CreateHostEventModal open={showCreateEvent} onOpenChange={setShowCreateEvent} />
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import {
     BarChart3,
     TrendingUp,
@@ -59,6 +60,7 @@ interface DailyMetric {
 }
 
 export default function BusinessDashboard() {
+    const { toast } = useToast();
     const { placeId } = useBusiness();
 
     // Fetch KPI Metrics

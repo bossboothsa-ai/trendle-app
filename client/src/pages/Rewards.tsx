@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Rewards() {
+  const { toast } = useToast();
   const { data: rewards, isLoading } = useRewards();
   const { data: user } = useCurrentUser();
   const redeem = useRedeemReward();

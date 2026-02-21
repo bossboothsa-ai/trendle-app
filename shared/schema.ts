@@ -5,6 +5,21 @@ import { z } from "zod";
 
 // === TABLE DEFINITIONS ===
 
+export const hostCategories = [
+  "Ladies Night",
+  "Networking",
+  "Rave / DJ Night",
+  "Comedy",
+  "Book Club",
+  "Social Meetup",
+  "Other"
+] as const;
+
+export type HostCategory = typeof hostCategories[number];
+
+export const eventPromotionTiers = ["basic", "push", "featured"] as const;
+export type EventPromotionTier = typeof eventPromotionTiers[number];
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -12,6 +27,14 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   password: text("password").notNull(),
   role: text("role").default("user").notNull(), // user, admin
+  // Host fields
+  isHost: boolean("is_host").default(false).notNull(),
+  hostName: text("host_name"), // Display name when hosting events
+  hostBio: text("host_bio"), // Short bio for host profile
+  hostAvatar: text("host_avatar"), // Optional separate avatar for host
+  hostVerified: boolean("host_verified").default(false).notNull(), // Verified host status
+  hostCreatedAt: timestamp("host_created_at"), // When user became a host
+  // End host fields
   emailVerified: boolean("email_verified").default(false).notNull(),
   verificationToken: text("verification_token"),
   verificationTokenExpiry: timestamp("verification_token_expiry"),
@@ -367,6 +390,97 @@ export const systemLogs = pgTable("system_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// === EVENTS SYSTEM ===
+
+export const eventCategories = [
+  "coffee rave",
+  "networking",
+  "launch",
+  "meetup",
+  "workshop",
+  "live music",
+  "food festival",
+  "art exhibition",
+  "wellness",
+  "sports",
+  "social",
+  "other"
+] as const;
+
+export type EventCategory = typeof eventCategories[number];
+
+export const eventStatuses = ["upcoming", "live", "completed", "cancelled"] as const;
+export type EventStatus = typeof eventStatuses[number];
+
+export const checkInMethods = ["gps", "qr"] as const;
+export type CheckInMethod = typeof checkInMethods[number];
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  coverImage: text("cover_image"),
+  venueId: integer("venue_id").notNull(), // Linked venue (place)
+  hostId: integer("host_id"), // Business account user ID or event organizer
+  hostType: text("host_type").default("business").notNull(), // "business" or "organizer"
+  hostName: text("host_name").notNull(), // Display name of host
+  category: text("category").notNull(), // Event category
+  startDateTime: timestamp("start_date_time").notNull(),
+  endDateTime: timestamp("end_date_time").notNull(),
+  pointsReward: integer("points_reward").default(100).notNull(), // Points for check-in
+  postBonusPoints: integer("post_bonus_points").default(50).notNull(), // Bonus for posting
+  checkInMethod: text("check_in_method").default("gps").notNull(), // "gps" or "qr"
+  status: text("status").default("upcoming").notNull(), // upcoming, live, completed, cancelled
+  isFeatured: boolean("is_featured").default(false).notNull(), // Admin featured
+  isTrending: boolean("is_trending").default(false).notNull(), // Trending status
+  maxAttendees: integer("max_attendees"), // Optional limit
+  location: text("location"), // Override venue location if different
+  latitude: text("latitude"), // For GPS check-in (stored as string for compatibility)
+  longitude: text("longitude"), // For GPS check-in
+  qrCode: text("qr_code"), // Generated QR code for check-in
+  approvedBy: integer("approved_by"), // Admin who approved
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  promotionTier: text("promotion_tier").default("basic").notNull(), // "basic", "push", "featured"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const eventAttendees = pgTable("event_attendees", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  userId: integer("user_id").notNull(),
+  checkedIn: boolean("checked_in").default(false).notNull(),
+  checkedInAt: timestamp("checked_in_at"),
+  checkInMethod: text("check_in_method"), // gps or qr
+  pointsEarned: integer("points_earned").default(0).notNull(),
+  postBonusEarned: integer("post_bonus_earned").default(0).notNull(),
+  postsCount: integer("posts_count").default(0).notNull(),
+  rating: integer("rating"), // User rating for event
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const eventMoments = pgTable("event_moments", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  postId: integer("post_id").notNull(),
+  experienceZone: text("experience_zone"), // Optional: seating/area within venue
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const eventAnalytics = pgTable("event_analytics", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD
+  checkIns: integer("check_ins").default(0).notNull(),
+  uniqueCheckIns: integer("unique_check_ins").default(0).notNull(),
+  posts: integer("posts").default(0).notNull(),
+  engagement: integer("engagement").default(0).notNull(), // likes + comments
+  rating: integer("rating").default(0).notNull(), // Avg rating * 10
+  returnIntent: integer("return_intent").default(0).notNull(), // % who would return * 100
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Define manual Zod schemas for JSONB fields to help Drizzle-Zod
 const mediaItemSchema = z.object({
   type: z.enum(["image", "video"]),
@@ -426,6 +540,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   dailyLimits: many(userDailyLimits),
   verificationRequests: many(verificationRequests),
   systemLogs: many(systemLogs),
+  eventAttendees: many(eventAttendees),
 }));
 
 export const pointsHistoryRelations = relations(pointsHistory, ({ one }) => ({
@@ -437,6 +552,7 @@ export const pointsHistoryRelations = relations(pointsHistory, ({ one }) => ({
 
 export const placesRelations = relations(places, ({ many }) => ({
   posts: many(posts),
+  events: many(events),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -648,3 +764,97 @@ export const systemLogsRelations = relations(systemLogs, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// === EVENT RELATIONS ===
+
+export const eventsRelations = relations(events, ({ one, many }) => ({
+  venue: one(places, {
+    fields: [events.venueId],
+    references: [places.id],
+  }),
+  attendees: many(eventAttendees),
+  analytics: many(eventAnalytics),
+  moments: many(eventMoments),
+}));
+
+export const eventAttendeesRelations = relations(eventAttendees, ({ one }) => ({
+  event: one(events, {
+    fields: [eventAttendees.eventId],
+    references: [events.id],
+  }),
+  user: one(users, {
+    fields: [eventAttendees.userId],
+    references: [users.id],
+  }),
+}));
+
+export const eventMomentsRelations = relations(eventMoments, ({ one }) => ({
+  event: one(events, {
+    fields: [eventMoments.eventId],
+    references: [events.id],
+  }),
+  post: one(posts, {
+    fields: [eventMoments.postId],
+    references: [posts.id],
+  }),
+}));
+
+export const eventAnalyticsRelations = relations(eventAnalytics, ({ one }) => ({
+  event: one(events, {
+    fields: [eventAnalytics.eventId],
+    references: [events.id],
+  }),
+}));
+
+// === EVENT TYPES ===
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = typeof events.$inferInsert;
+export type EventAttendee = typeof eventAttendees.$inferSelect;
+export type InsertEventAttendee = typeof eventAttendees.$inferInsert;
+export type EventMoment = typeof eventMoments.$inferSelect;
+export type InsertEventMoment = typeof eventMoments.$inferInsert;
+export type EventAnalytics = typeof eventAnalytics.$inferSelect;
+export type InsertEventAnalytics = typeof eventAnalytics.$inferInsert;
+
+// === EVENT INSERT SCHEMAS ===
+export const insertEventSchema = createInsertSchema(events, {
+  category: z.enum(eventCategories),
+  status: z.enum(eventStatuses),
+  checkInMethod: z.enum(checkInMethods),
+}).omit({ id: true, createdAt: true, approvedAt: true });
+
+export const insertEventAttendeeSchema = createInsertSchema(eventAttendees).omit({ id: true, createdAt: true, checkedInAt: true });
+export const insertEventMomentSchema = createInsertSchema(eventMoments).omit({ id: true, createdAt: true });
+export const insertEventAnalyticsSchema = createInsertSchema(eventAnalytics).omit({ id: true, createdAt: true });
+
+// === HOST EVENT PROMOTIONS (Pay-Per-Push) ===
+
+export const hostEventPromotions = pgTable("host_event_promotions", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  hostId: integer("host_id").notNull(), // User who created the promotion
+  tier: text("tier").notNull(), // "basic", "push", "featured"
+  amount: integer("amount").notNull(), // Cost in points or cents
+  currency: text("currency").default("ZAR").notNull(), // ZAR, USD, points
+  status: text("status").default("pending").notNull(), // pending, paid, failed, expired
+  paymentMethod: text("payment_method"), // "in_app", "invoice"
+  paymentId: text("payment_id"), // External payment reference
+  invoiceNumber: text("invoice_number"), // For invoice generation
+  invoiceUrl: text("invoice_url"), // URL to download invoice
+  startDate: timestamp("start_date").notNull(), // When promotion starts
+  endDate: timestamp("end_date").notNull(), // When promotion ends
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  paidAt: timestamp("paid_at"),
+});
+
+// Promotion pricing (can be customized per admin)
+export const promotionPricing = {
+  basic: { amount: 0, label: "Free Listing", visibility: "low" },
+  push: { amount: 499, label: "Event Push", visibility: "medium" }, // R4.99
+  featured: { amount: 1499, label: "Featured", visibility: "high" }, // R14.99
+} as const;
+
+export type HostEventPromotion = typeof hostEventPromotions.$inferSelect;
+export type InsertHostEventPromotion = typeof hostEventPromotions.$inferInsert;
+
+export const insertHostEventPromotionSchema = createInsertSchema(hostEventPromotions).omit({ id: true, createdAt: true, paidAt: true });

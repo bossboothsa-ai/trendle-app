@@ -7,7 +7,8 @@ import {
   type Survey, type SurveyResponse, type DailyTask, type UserDailyTask, type UserReward, type PointsHistory, type Cashout,
   type DeviceFingerprint, type ImageHash, type FraudFlag, type UserDailyLimit, type BusinessAccount, type InsertBusinessAccount,
   type Checkin, type BusinessDailyMetric, type ReportExport, type BusinessAuditLog,
-  verificationRequests, systemLogs, type VerificationRequest, type SystemLog
+  verificationRequests, systemLogs, type VerificationRequest, type SystemLog,
+  events, eventAttendees, eventAnalytics, eventMoments, type Event, type EventAttendee, type EventAnalytics
 } from "@shared/schema";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { AntiFraudGuard } from "./antiFraudGuard";
@@ -179,6 +180,47 @@ export interface IStorage {
     rewardsRedeemed: number;
     surveysCompleted: number;
   }>;
+
+  // Events
+  getEvents(filters?: { status?: string; category?: string; venueId?: number; featured?: boolean; trending?: boolean }): Promise<(Event & { venue: Place | null; attendeesCount: number; postsCount: number })[]>;
+  getEvent(id: number, userId?: number): Promise<(Event & { venue: Place | null; attendeesCount: number; postsCount: number; isAttending: boolean; isCheckedIn: boolean }) | undefined>;
+  createEvent(event: Partial<Event>): Promise<Event>;
+  updateEvent(id: number, event: Partial<Event>): Promise<Event>;
+  deleteEvent(id: number): Promise<void>;
+
+  // Event Attendance
+  attendEvent(eventId: number, userId: number): Promise<EventAttendee>;
+  cancelAttendance(eventId: number, userId: number): Promise<void>;
+  getEventAttendees(eventId: number): Promise<(EventAttendee & { user: User })[]>;
+  checkInToEvent(eventId: number, userId: number, method: string, lat?: number, lng?: number, qrCode?: string): Promise<{ success: boolean; pointsEarned: number; message: string }>;
+
+  // Event Moments
+  getEventMoments(eventId: number): Promise<Post[]>;
+  linkPostToEvent(postId: number, eventId: number, experienceZone?: string): Promise<void>;
+
+  // Event Ratings
+  rateEvent(eventId: number, userId: number, rating: number, feedback?: string): Promise<void>;
+
+  // User Events
+  getUserEvents(userId: number, status: 'upcoming' | 'attended' | 'all'): Promise<(Event & { venue: Place | null; checkedIn: boolean; pointsEarned: number })[]>;
+
+  // Event Analytics
+  getEventAnalytics(eventId: number): Promise<EventAnalytics | undefined>;
+  createEventAnalytics(analytics: Partial<EventAnalytics>): Promise<EventAnalytics>;
+  updateEventAnalytics(eventId: number, data: Partial<EventAnalytics>): Promise<void>;
+
+  // Platform Event Analytics
+  getPlatformEventAnalytics(): Promise<{
+    activeEventsToday: number;
+    totalCheckInsToday: number;
+    totalAttendees: number;
+    mostEngagingEvents: any[];
+    venueParticipationRate: number;
+    trendingEvents: any[];
+  }>;
+
+  // Admin Event Management
+  approveEvent(eventId: number, adminId: number, approved: boolean, reason?: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -841,7 +883,571 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  // ========== EVENT METHODS ==========
 
+  async getEvents(filters?: { status?: string; category?: string; venueId?: number; featured?: boolean; trending?: boolean }): Promise<(Event & { venue: Place | null; attendeesCount: number; postsCount: number })[]> {
+    let query = db.select().from(events).$dynamic();
+    const conditions = [];
+
+    if (filters?.status) {
+      conditions.push(eq(events.status, filters.status));
+    }
+    if (filters?.category) {
+      conditions.push(eq(events.category, filters.category));
+    }
+    if (filters?.venueId) {
+      conditions.push(eq(events.venueId, filters.venueId));
+    }
+    if (filters?.featured) {
+      conditions.push(eq(events.isFeatured, true));
+    }
+    if (filters?.trending) {
+      conditions.push(eq(events.isTrending, true));
+    }
+
+    const allEvents = conditions.length > 0
+      ? await db.select().from(events).where(and(...conditions)).orderBy(desc(events.startDateTime))
+      : await db.select().from(events).orderBy(desc(events.startDateTime));
+
+    const results = [];
+    for (const event of allEvents) {
+      const venue = await this.getPlace(event.venueId);
+      const attendees = await db.select().from(eventAttendees).where(eq(eventAttendees.eventId, event.id));
+      const moments = await db.select().from(eventMoments).where(eq(eventMoments.eventId, event.id));
+      results.push({
+        ...event,
+        venue: venue || null,
+        attendeesCount: attendees.length,
+        postsCount: moments.length
+      });
+    }
+    return results;
+  }
+
+  async getEvent(id: number, userId?: number): Promise<(Event & { venue: Place | null; attendeesCount: number; postsCount: number; isAttending: boolean; isCheckedIn: boolean }) | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    if (!event) return undefined;
+
+    const venue = await this.getPlace(event.venueId);
+    const attendees = await db.select().from(eventAttendees).where(eq(eventAttendees.eventId, event.id));
+    const moments = await db.select().from(eventMoments).where(eq(eventMoments.eventId, event.id));
+
+    let isAttending = false;
+    let isCheckedIn = false;
+
+    if (userId) {
+      const userAttendee = attendees.find(a => a.userId === userId);
+      isAttending = !!userAttendee;
+      isCheckedIn = userAttendee?.checkedIn || false;
+    }
+
+    return {
+      ...event,
+      venue: venue || null,
+      attendeesCount: attendees.length,
+      postsCount: moments.length,
+      isAttending,
+      isCheckedIn
+    };
+  }
+
+  async createEvent(event: Partial<Event>): Promise<Event> {
+    // Generate QR code for the event
+    const qrCode = `EVENT-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+    const [newEvent] = await db.insert(events).values({ ...event, qrCode } as any).returning();
+    return newEvent;
+  }
+
+  async updateEvent(id: number, event: Partial<Event>): Promise<Event> {
+    const [updated] = await db.update(events)
+      .set(event as any)
+      .where(eq(events.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteEvent(id: number): Promise<void> {
+    await db.delete(eventAttendees).where(eq(eventAttendees.eventId, id));
+    await db.delete(eventMoments).where(eq(eventMoments.eventId, id));
+    await db.delete(eventAnalytics).where(eq(eventAnalytics.eventId, id));
+    await db.delete(events).where(eq(events.id, id));
+  }
+
+  async attendEvent(eventId: number, userId: number): Promise<EventAttendee> {
+    const existing = await db.select().from(eventAttendees)
+      .where(and(eq(eventAttendees.eventId, eventId), eq(eventAttendees.userId, userId)));
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const [attendee] = await db.insert(eventAttendees).values({
+      eventId,
+      userId,
+      checkedIn: false,
+      pointsEarned: 0
+    } as any).returning();
+
+    return attendee;
+  }
+
+  async cancelAttendance(eventId: number, userId: number): Promise<void> {
+    await db.delete(eventAttendees)
+      .where(and(eq(eventAttendees.eventId, eventId), eq(eventAttendees.userId, userId)));
+  }
+
+  async getEventAttendees(eventId: number): Promise<(EventAttendee & { user: User })[]> {
+    const attendees = await db.select().from(eventAttendees).where(eq(eventAttendees.eventId, eventId));
+    const results = [];
+    for (const a of attendees) {
+      const user = await this.getUser(a.userId);
+      if (user) {
+        results.push({ ...a, user: user as User });
+      }
+    }
+    return results;
+  }
+
+  async checkInToEvent(eventId: number, userId: number, method: string, lat?: number, lng?: number, qrCode?: string): Promise<{ success: boolean; pointsEarned: number; message: string }> {
+    const event = await this.getEvent(eventId);
+    if (!event) {
+      return { success: false, pointsEarned: 0, message: 'Event not found' };
+    }
+
+    // Check if user is attending
+    const existingAttendee = await db.select().from(eventAttendees)
+      .where(and(eq(eventAttendees.eventId, eventId), eq(eventAttendees.userId, userId)));
+
+    if (existingAttendee.length === 0) {
+      return { success: false, pointsEarned: 0, message: 'You must first register to attend this event' };
+    }
+
+    if (existingAttendee[0].checkedIn) {
+      return { success: false, pointsEarned: 0, message: 'You have already checked in to this event' };
+    }
+
+    // Verify check-in method
+    if (method === 'gps' && event.checkInMethod === 'qr') {
+      return { success: false, pointsEarned: 0, message: 'This event requires QR code check-in' };
+    }
+    if (method === 'qr' && event.checkInMethod === 'gps') {
+      return { success: false, pointsEarned: 0, message: 'This event requires GPS check-in' };
+    }
+    if (method === 'qr' && qrCode !== event.qrCode) {
+      return { success: false, pointsEarned: 0, message: 'Invalid QR code' };
+    }
+
+    // Calculate proximity for GPS check-in (simple distance check)
+    if (method === 'gps' && lat && lng && event.latitude && event.longitude) {
+      const distance = Math.sqrt(
+        Math.pow(Number(lat) - Number(event.latitude), 2) +
+        Math.pow(Number(lng) - Number(event.longitude), 2)
+      );
+      // Roughly ~111km per degree, so 0.01 degrees is about 1.1km
+      if (distance > 0.01) { // More than ~1km away
+        return { success: false, pointsEarned: 0, message: 'You must be at the event venue to check in' };
+      }
+    }
+
+    // Check if event is active
+    const now = new Date();
+    const startTime = new Date(event.startDateTime);
+    const endTime = new Date(event.endDateTime);
+
+    if (now < startTime) {
+      return { success: false, pointsEarned: 0, message: 'Event has not started yet' };
+    }
+    if (now > endTime) {
+      return { success: false, pointsEarned: 0, message: 'Event has already ended' };
+    }
+
+    // Update check-in
+    const pointsEarned = event.pointsReward;
+    await db.update(eventAttendees)
+      .set({
+        checkedIn: true,
+        checkedInAt: new Date(),
+        checkInMethod: method,
+        pointsEarned
+      })
+      .where(eq(eventAttendees.id, existingAttendee[0].id));
+
+    // Award points to user
+    await this.updateUserPoints(userId, pointsEarned, `Event check-in: ${event.name}`);
+
+    // Update analytics
+    const today = new Date().toISOString().split('T')[0];
+    const existingAnalytics = await db.select().from(eventAnalytics)
+      .where(and(eq(eventAnalytics.eventId, eventId), eq(eventAnalytics.date, today)));
+
+    if (existingAnalytics.length > 0) {
+      await db.update(eventAnalytics)
+        .set({ checkIns: existingAnalytics[0].checkIns + 1 })
+        .where(eq(eventAnalytics.id, existingAnalytics[0].id));
+    } else {
+      await db.insert(eventAnalytics).values({
+        eventId,
+        date: today,
+        checkIns: 1,
+        uniqueCheckIns: 1,
+        posts: 0,
+        engagement: 0,
+        rating: 0,
+        returnIntent: 0
+      } as any);
+    }
+
+    return { success: true, pointsEarned, message: `Checked in! You earned ${pointsEarned} points` };
+  }
+
+  async getEventMoments(eventId: number): Promise<Post[]> {
+    const eventMomentLinks = await db.select().from(eventMoments).where(eq(eventMoments.eventId, eventId));
+    const postIds = eventMomentLinks.map(m => m.postId);
+    if (postIds.length === 0) return [];
+
+    const momentPosts = await db.select().from(posts).where(inArray(posts.id, postIds));
+    return momentPosts;
+  }
+
+  async linkPostToEvent(postId: number, eventId: number, experienceZone?: string): Promise<void> {
+    await db.insert(eventMoments).values({
+      eventId,
+      postId,
+      experienceZone
+    } as any);
+  }
+
+  async rateEvent(eventId: number, userId: number, rating: number, feedback?: string): Promise<void> {
+    await db.update(eventAttendees)
+      .set({ rating, feedback })
+      .where(and(eq(eventAttendees.eventId, eventId), eq(eventAttendees.userId, userId)));
+  }
+
+  async getUserEvents(userId: number, status: 'upcoming' | 'attended' | 'all'): Promise<(Event & { venue: Place | null; checkedIn: boolean; pointsEarned: number })[]> {
+    const now = new Date();
+    const userAttendees = await db.select().from(eventAttendees).where(eq(eventAttendees.userId, userId));
+
+    const results = [];
+    for (const attendee of userAttendees) {
+      const [event] = await db.select().from(events).where(eq(events.id, attendee.eventId));
+      if (!event) continue;
+
+      const venue = await this.getPlace(event.venueId);
+
+      let include = false;
+      if (status === 'all') include = true;
+      if (status === 'upcoming' && new Date(event.startDateTime) > now) include = true;
+      if (status === 'attended' && attendee.checkedIn) include = true;
+
+      if (include) {
+        results.push({
+          ...event,
+          venue: venue || null,
+          checkedIn: attendee.checkedIn,
+          pointsEarned: attendee.pointsEarned
+        });
+      }
+    }
+
+    return results.sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime());
+  }
+
+  async getEventAnalytics(eventId: number): Promise<EventAnalytics | undefined> {
+    const [analytics] = await db.select().from(eventAnalytics).where(eq(eventAnalytics.eventId, eventId));
+    return analytics;
+  }
+
+  async createEventAnalytics(analytics: Partial<EventAnalytics>): Promise<EventAnalytics> {
+    const [newAnalytics] = await db.insert(eventAnalytics).values(analytics as any).returning();
+    return newAnalytics;
+  }
+
+  async updateEventAnalytics(eventId: number, data: Partial<EventAnalytics>): Promise<void> {
+    const today = new Date().toISOString().split('T')[0];
+    const existing = await db.select().from(eventAnalytics)
+      .where(and(eq(eventAnalytics.eventId, eventId), eq(eventAnalytics.date, today)));
+
+    if (existing.length > 0) {
+      await db.update(eventAnalytics)
+        .set(data as any)
+        .where(eq(eventAnalytics.id, existing[0].id));
+    }
+  }
+
+  async getPlatformEventAnalytics(): Promise<{
+    activeEventsToday: number;
+    totalCheckInsToday: number;
+    totalAttendees: number;
+    mostEngagingEvents: any[];
+    venueParticipationRate: number;
+    trendingEvents: any[];
+  }> {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+
+    // Get active events today (live or upcoming)
+    const allEvents = await db.select().from(events);
+    const activeEvents = allEvents.filter(e => {
+      const start = new Date(e.startDateTime);
+      const end = new Date(e.endDateTime);
+      return e.status === 'live' || (start <= now && end >= now);
+    });
+
+    // Get all attendees
+    const allAttendees = await db.select().from(eventAttendees);
+
+    // Get today's check-ins
+    const todayAnalytics = await db.select().from(eventAnalytics).where(eq(eventAnalytics.date, today));
+    const totalCheckInsToday = todayAnalytics.reduce((sum, a) => sum + a.checkIns, 0);
+
+    // Get most engaging events (by total engagement)
+    const eventEngagement = await db.select().from(eventAnalytics);
+    const engagementByEvent: { [key: number]: number } = {};
+    for (const a of eventEngagement) {
+      engagementByEvent[a.eventId] = (engagementByEvent[a.eventId] || 0) + a.engagement;
+    }
+
+    const mostEngaging = Object.entries(engagementByEvent)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([eventId, engagement]) => {
+        const event = allEvents.find(e => e.id === Number(eventId));
+        return { event, engagement };
+      });
+
+    // Get venues with events
+    const venuesWithEvents = new Set(allEvents.map(e => e.venueId));
+    const allVenues = await db.select().from(places);
+    const venueParticipationRate = (venuesWithEvents.size / allVenues.length) * 100;
+
+    // Get trending events
+    const trendingEvents = allEvents
+      .filter(e => e.isTrending || e.isFeatured)
+      .slice(0, 5);
+
+    return {
+      activeEventsToday: activeEvents.length,
+      totalCheckInsToday,
+      totalAttendees: allAttendees.length,
+      mostEngagingEvents: mostEngaging,
+      venueParticipationRate,
+      trendingEvents
+    };
+  }
+
+  async approveEvent(eventId: number, adminId: number, approved: boolean, reason?: string): Promise<void> {
+    if (approved) {
+      await db.update(events)
+        .set({
+          status: 'upcoming',
+          approvedBy: adminId,
+          approvedAt: new Date()
+        })
+        .where(eq(events.id, eventId));
+    } else {
+      await db.update(events)
+        .set({
+          status: 'cancelled',
+          rejectionReason: reason
+        })
+        .where(eq(events.id, eventId));
+    }
+  }
+
+  // ========================================
+  // HOST FUNCTIONS
+  // ========================================
+
+  async upgradeToHost(userId: number, data: { isHost: boolean; hostName: string; hostBio?: string; hostCreatedAt: Date }): Promise<User> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        isHost: data.isHost,
+        hostName: data.hostName,
+        hostBio: data.hostBio,
+        hostCreatedAt: data.hostCreatedAt,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated as User;
+  }
+
+  async updateHostProfile(userId: number, data: { hostName?: string; hostBio?: string; hostAvatar?: string }): Promise<User> {
+    const updateData: any = {};
+    if (data.hostName !== undefined) updateData.hostName = data.hostName;
+    if (data.hostBio !== undefined) updateData.hostBio = data.hostBio;
+    if (data.hostAvatar !== undefined) updateData.hostAvatar = data.hostAvatar;
+
+    const [updated] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+    return updated as User;
+  }
+
+  async getHostEvents(userId: number, status?: string): Promise<any[]> {
+    let query = db.select().from(events).where(eq(events.hostId, userId));
+    
+    let eventList = await query;
+    
+    if (status) {
+      eventList = eventList.filter(e => e.status === status);
+    }
+
+    // Get venues and attendee counts for each event
+    const eventsWithDetails = await Promise.all(
+      eventList.map(async (event) => {
+        const venue = await this.getPlace(event.venueId);
+        const attendees = await db.select().from(eventAttendees).where(eq(eventAttendees.eventId, event.id));
+        return {
+          ...event,
+          venue,
+          attendeesCount: attendees.length,
+        };
+      })
+    );
+
+    return eventsWithDetails;
+  }
+
+  async updateHostEvent(eventId: number, userId: number, data: any): Promise<Event | null> {
+    // Verify ownership
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event || event.hostId !== userId) {
+      return null;
+    }
+
+    const [updated] = await db
+      .update(events)
+      .set(data)
+      .where(eq(events.id, eventId))
+      .returning();
+    return updated as Event;
+  }
+
+  async deleteHostEvent(eventId: number, userId: number): Promise<void> {
+    // Verify ownership
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event || event.hostId !== userId) {
+      throw new Error("Event not found or access denied");
+    }
+
+    await db.delete(eventAttendees).where(eq(eventAttendees.eventId, eventId));
+    await db.delete(events).where(eq(events.id, eventId));
+  }
+
+  async promoteHostEvent(eventId: number, userId: number, tier: string, paymentMethod: string): Promise<any> {
+    // Verify ownership
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    if (!event || event.hostId !== userId) {
+      throw new Error("Event not found or access denied");
+    }
+
+    const pricing: Record<string, number> = {
+      basic: 0,
+      push: 499,
+      featured: 1499,
+    };
+
+    const amount = pricing[tier] || 0;
+
+    // Generate invoice number
+    const invoiceNumber = `INV-${Date.now()}-${eventId}`;
+
+    // For in_app payment, simulate immediate payment
+    // For invoice, create pending promotion
+    const promotion = {
+      id: Date.now(),
+      tier,
+      amount,
+      invoiceNumber: paymentMethod === 'invoice' ? invoiceNumber : undefined,
+      invoiceUrl: paymentMethod === 'invoice' ? `/invoices/${invoiceNumber}` : undefined,
+    };
+
+    // Update event based on tier
+    const updateData: any = {};
+    if (tier === 'featured') {
+      updateData.isFeatured = true;
+    }
+    // Push tier could set isTrending or similar
+    if (tier === 'push') {
+      updateData.isTrending = true;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await db.update(events).set(updateData).where(eq(events.id, eventId));
+    }
+
+    return {
+      promotion,
+      message: paymentMethod === 'invoice' 
+        ? `Invoice ${invoiceNumber} generated. Payment required to activate promotion.`
+        : `Event promoted successfully!`,
+    };
+  }
+
+  async getPromotionStatus(eventId: number): Promise<any> {
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    
+    let currentPromotion = null;
+    if (event?.isFeatured) {
+      currentPromotion = {
+        tier: 'featured',
+        status: 'active',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+      };
+    } else if (event?.isTrending) {
+      currentPromotion = {
+        tier: 'push',
+        status: 'active',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days
+      };
+    }
+
+    return {
+      currentPromotion,
+      pricing: {
+        basic: { amount: 0, label: "Free Listing" },
+        push: { amount: 499, label: "Event Push" },
+        featured: { amount: 1499, label: "Featured" },
+      },
+    };
+  }
+
+  async getHostAnalytics(userId: number): Promise<any> {
+    const hostEvents = await this.getHostEvents(userId);
+    
+    const upcomingEvents = hostEvents.filter(e => e.status === 'upcoming').length;
+    const completedEvents = hostEvents.filter(e => e.status === 'completed').length;
+    
+    // Get all attendees for host's events
+    let totalAttendees = 0;
+    for (const event of hostEvents) {
+      const attendees = await db.select().from(eventAttendees).where(eq(eventAttendees.eventId, event.id));
+      totalAttendees += attendees.filter(a => a.checkedIn).length;
+    }
+
+    // Mock promotion count
+    const totalPromotions = hostEvents.filter(e => e.isFeatured || e.isTrending).length;
+
+    return {
+      totalEvents: hostEvents.length,
+      totalAttendees,
+      upcomingEvents,
+      completedEvents,
+      totalPromotions,
+      recentPerformance: hostEvents.slice(0, 5).map(e => ({
+        eventId: e.id,
+        eventName: e.name,
+        attendees: e.attendeesCount || 0,
+        checkIns: e.attendeesCount || 0,
+        date: e.startDateTime,
+      })),
+    };
+  }
 
   async seed(): Promise<void> {
     console.log("Database clean reset complete. No mock data generated.");

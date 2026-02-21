@@ -3,7 +3,6 @@ import {
   insertUserSchema,
   insertPlaceSchema,
   insertPostSchema,
-  insertCommentSchema,
   insertRewardSchema,
   insertSurveyResponseSchema,
   insertStorySchema,
@@ -19,7 +18,15 @@ import {
   userDailyTasks,
   pointsHistory,
   stories,
-  cashouts
+  cashouts,
+  events,
+  eventAttendees,
+  eventAnalytics,
+  eventCategories,
+  eventStatuses,
+  checkInMethods,
+  hostCategories,
+  eventPromotionTiers,
 } from './schema';
 
 export const errorSchemas = {
@@ -337,6 +344,368 @@ export const api = {
           201: z.custom<typeof cashouts.$inferSelect>(),
           400: z.object({ message: z.string() }),
         }
+      }
+    }
+  },
+
+  // === EVENTS ===
+  events: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/events' as const,
+      input: z.object({
+        status: z.enum(eventStatuses).optional(),
+        category: z.string().optional(),
+        venueId: z.number().optional(),
+        featured: z.boolean().optional(),
+        trending: z.boolean().optional(),
+      }).optional(),
+      responses: {
+        200: z.array(z.custom<typeof events.$inferSelect & {
+          venue: typeof places.$inferSelect | null;
+          attendeesCount: number;
+          postsCount: number;
+        }>()),
+      }
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/events/:id' as const,
+      responses: {
+        200: z.custom<typeof events.$inferSelect & {
+          venue: typeof places.$inferSelect | null;
+          attendeesCount: number;
+          postsCount: number;
+          isAttending: boolean;
+          isCheckedIn: boolean;
+        }>(),
+        404: errorSchemas.notFound,
+      }
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/events' as const,
+      input: z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        coverImage: z.string().url().optional(),
+        venueId: z.number(),
+        hostName: z.string(),
+        hostType: z.enum(['business', 'organizer']).default('business'),
+        category: z.enum(eventCategories),
+        startDateTime: z.string(), // ISO date string
+        endDateTime: z.string(), // ISO date string
+        pointsReward: z.number().default(100),
+        postBonusPoints: z.number().default(50),
+        checkInMethod: z.enum(checkInMethods).default('gps'),
+        maxAttendees: z.number().optional(),
+        location: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        promotionTier: z.enum(eventPromotionTiers).default('basic'),
+      }),
+      responses: {
+        201: z.custom<typeof events.$inferSelect>(),
+        400: errorSchemas.validation,
+      }
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/events/:id' as const,
+      input: z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        coverImage: z.string().url().optional(),
+        category: z.enum(eventCategories).optional(),
+        startDateTime: z.string().optional(),
+        endDateTime: z.string().optional(),
+        pointsReward: z.number().optional(),
+        postBonusPoints: z.number().optional(),
+        checkInMethod: z.enum(checkInMethods).optional(),
+        maxAttendees: z.number().optional(),
+        location: z.string().optional(),
+        status: z.enum(eventStatuses).optional(),
+        isFeatured: z.boolean().optional(),
+        isTrending: z.boolean().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof events.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      }
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/events/:id' as const,
+      responses: {
+        204: z.null(),
+        404: errorSchemas.notFound,
+      }
+    },
+    // Attend an event
+    attend: {
+      method: 'POST' as const,
+      path: '/api/events/:id/attend' as const,
+      responses: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: z.object({ message: z.string() }),
+      }
+    },
+    // Cancel attendance
+    cancelAttend: {
+      method: 'POST' as const,
+      path: '/api/events/:id/cancel-attend' as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+      }
+    },
+    // Check-in to event
+    checkIn: {
+      method: 'POST' as const,
+      path: '/api/events/:id/check-in' as const,
+      input: z.object({
+        method: z.enum(checkInMethods),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        qrCode: z.string().optional(),
+      }),
+      responses: {
+        200: z.object({ success: z.boolean(), pointsEarned: z.number(), message: z.string() }),
+        400: z.object({ message: z.string() }),
+      }
+    },
+    // Get attendees
+    attendees: {
+      method: 'GET' as const,
+      path: '/api/events/:id/attendees' as const,
+      responses: {
+        200: z.array(z.custom<typeof eventAttendees.$inferSelect & { user: typeof users.$inferSelect }>()),
+      }
+    },
+    // Get event moments (posts during event)
+    moments: {
+      method: 'GET' as const,
+      path: '/api/events/:id/moments' as const,
+      responses: {
+        200: z.array(z.custom<typeof posts.$inferSelect & { author: typeof users.$inferSelect }>()),
+      }
+    },
+    // Rate event
+    rate: {
+      method: 'POST' as const,
+      path: '/api/events/:id/rate' as const,
+      input: z.object({
+        rating: z.number().min(1).max(5),
+        feedback: z.string().optional(),
+      }),
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        400: z.object({ message: z.string() }),
+      }
+    },
+    // Get user's events (attended/upcoming)
+    myEvents: {
+      method: 'GET' as const,
+      path: '/api/events/my/:status' as const,
+      input: z.object({
+        status: z.enum(['upcoming', 'attended', 'all'])
+      }),
+      responses: {
+        200: z.array(z.custom<typeof events.$inferSelect & {
+          venue: typeof places.$inferSelect | null;
+          checkedIn: boolean;
+          pointsEarned: number;
+        }>()),
+      }
+    },
+    // Admin: Approve/reject event
+    approve: {
+      method: 'POST' as const,
+      path: '/api/events/:id/approve' as const,
+      input: z.object({
+        approved: z.boolean(),
+        rejectionReason: z.string().optional(),
+      }),
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        400: z.object({ message: z.string() }),
+      }
+    },
+    // Admin: Get analytics
+    analytics: {
+      method: 'GET' as const,
+      path: '/api/events/:id/analytics' as const,
+      responses: {
+        200: z.custom<typeof eventAnalytics.$inferSelect>(),
+      }
+    },
+    // Admin: Platform-wide analytics
+    platformAnalytics: {
+      method: 'GET' as const,
+      path: '/api/events/analytics/platform' as const,
+      responses: {
+        200: z.object({
+          activeEventsToday: z.number(),
+          totalCheckInsToday: z.number(),
+          totalAttendees: z.number(),
+          mostEngagingEvents: z.array(z.any()),
+          venueParticipationRate: z.number(),
+          trendingEvents: z.array(z.any()),
+        }),
+      }
+    }
+  },
+
+  // === TRENDLE HOSTS ===
+  hosts: {
+    // Upgrade to host
+    upgrade: {
+      method: 'POST' as const,
+      path: '/api/hosts/upgrade' as const,
+      input: z.object({
+        hostName: z.string().min(2),
+        hostBio: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+      }
+    },
+    // Get host profile
+    profile: {
+      method: 'GET' as const,
+      path: '/api/hosts/profile' as const,
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+      }
+    },
+    // Update host profile
+    updateProfile: {
+      method: 'PUT' as const,
+      path: '/api/hosts/profile' as const,
+      input: z.object({
+        hostName: z.string().min(2).optional(),
+        hostBio: z.string().optional(),
+        hostAvatar: z.string().url().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+      }
+    },
+    // Get host's events
+    events: {
+      method: 'GET' as const,
+      path: '/api/hosts/events' as const,
+      input: z.object({
+        status: z.enum(eventStatuses).optional(),
+      }).optional(),
+      responses: {
+        200: z.array(z.any()),
+      }
+    },
+    // Create host event
+    createEvent: {
+      method: 'POST' as const,
+      path: '/api/hosts/events' as const,
+      input: z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        coverImage: z.string().url().optional(),
+        venueId: z.number(),
+        category: z.enum(hostCategories),
+        startDateTime: z.string(),
+        endDateTime: z.string(),
+        pointsReward: z.number().default(100),
+        maxAttendees: z.number().optional(),
+        location: z.string().optional(),
+        promotionTier: z.enum(eventPromotionTiers).default('basic'),
+      }),
+      responses: {
+        201: z.custom<typeof events.$inferSelect>(),
+        400: errorSchemas.validation,
+      }
+    },
+    // Update host event
+    updateEvent: {
+      method: 'PUT' as const,
+      path: '/api/hosts/events/:id' as const,
+      input: z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        coverImage: z.string().url().optional(),
+        category: z.enum(hostCategories).optional(),
+        startDateTime: z.string().optional(),
+        endDateTime: z.string().optional(),
+        pointsReward: z.number().optional(),
+        maxAttendees: z.number().optional(),
+        location: z.string().optional(),
+        status: z.enum(eventStatuses).optional(),
+      }),
+      responses: {
+        200: z.custom<typeof events.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      }
+    },
+    // Delete host event
+    deleteEvent: {
+      method: 'DELETE' as const,
+      path: '/api/hosts/events/:id' as const,
+      responses: {
+        204: z.null(),
+        404: errorSchemas.notFound,
+      }
+    },
+    // Promote event (pay-per-push)
+    promoteEvent: {
+      method: 'POST' as const,
+      path: '/api/hosts/events/:id/promote' as const,
+      input: z.object({
+        tier: z.enum(eventPromotionTiers),
+        paymentMethod: z.enum(['in_app', 'invoice']),
+      }),
+      responses: {
+        201: z.object({
+          promotion: z.object({
+            id: z.number(),
+            tier: z.string(),
+            amount: z.number(),
+            invoiceNumber: z.string().optional(),
+            invoiceUrl: z.string().optional(),
+          }),
+          message: z.string(),
+        }),
+        400: z.object({ message: z.string() }),
+      }
+    },
+    // Get promotion status
+    promotionStatus: {
+      method: 'GET' as const,
+      path: '/api/hosts/events/:id/promotion' as const,
+      responses: {
+        200: z.any(),
+      }
+    },
+    // Get host analytics
+    analytics: {
+      method: 'GET' as const,
+      path: '/api/hosts/analytics' as const,
+      responses: {
+        200: z.object({
+          totalEvents: z.number(),
+          totalAttendees: z.number(),
+          upcomingEvents: z.number(),
+          completedEvents: z.number(),
+          totalPromotions: z.number(),
+          recentPerformance: z.array(z.object({
+            eventId: z.number(),
+            eventName: z.string(),
+            attendees: z.number(),
+            checkIns: z.number(),
+            date: z.string(),
+          })),
+        }),
       }
     }
   }

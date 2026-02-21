@@ -1,21 +1,40 @@
 import { StoryRail } from "@/components/StoryRail";
 import { PostCard } from "@/components/PostCard";
 import { SuggestedUsers } from "@/components/SuggestedUsers";
-import { usePosts, useUser } from "@/hooks/use-trendle";
-import { Bell, Search, Loader2, Briefcase } from "lucide-react";
-import { Link } from "wouter";
+import { usePosts, useUser, useCurrentUser } from "@/hooks/use-trendle";
+import { Bell, Search, Loader2, Briefcase, Home as HomeIcon, Compass, CalendarDays, Gift, Wallet, User as UserIcon, Crown } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { useState, Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useDemo } from "@/context/DemoContext";
 
 export default function Home() {
   const { toast } = useToast();
   const [feedType, setFeedType] = useState<'foryou' | 'following'>('foryou');
   const { data: posts, isLoading } = usePosts(feedType);
   const { data: user } = useUser();
+  const { data: currentUser } = useCurrentUser();
+  const { isDemoMode } = useDemo();
+  const [location] = useLocation();
+
+  const showHost = isDemoMode || currentUser?.isHost;
+
+  const navItems = [
+    { icon: HomeIcon, label: "Home", path: "/home" },
+    { icon: Compass, label: "Explore", path: "/explore" },
+    { icon: CalendarDays, label: "Events", path: "/events" },
+    { icon: Gift, label: "Rewards", path: "/rewards" },
+    { icon: Wallet, label: "Wallet", path: "/wallet" },
+  ];
+
+  if (showHost) {
+    navItems.push({ icon: Crown, label: "Host", path: "/host" });
+  }
+  navItems.push({ icon: UserIcon, label: "Profile", path: "/profile" });
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-24">
       {/* Top Bar */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 py-3">
         <div className="flex items-center justify-between mb-3">
@@ -90,7 +109,6 @@ export default function Home() {
           )}
         </div>
       </main>
-
     </div>
   );
 }

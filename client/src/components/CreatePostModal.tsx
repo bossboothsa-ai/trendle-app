@@ -1,9 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreatePost, usePlaces } from "@/hooks/use-trendle";
+import { useCreatePost, usePlaces, useEvents, useUserEvents } from "@/hooks/use-trendle";
 import { useState, useEffect } from "react";
-import { MapPin, Loader2, Navigation } from "lucide-react";
+import { MapPin, Loader2, Navigation, Calendar } from "lucide-react";
 import { useUser } from "@/hooks/use-trendle";
 import { cn } from "@/lib/utils";
 import { MediaUploader } from "@/components/MediaUploader";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 interface CreatePostModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preSelectedEventId?: number;
 }
 
 interface MediaItem {
@@ -21,14 +22,16 @@ interface MediaItem {
   file?: File;
 }
 
-export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
+export function CreatePostModal({ open, onOpenChange, preSelectedEventId }: CreatePostModalProps) {
   const { data: user } = useUser();
   const { data: places } = usePlaces();
+  const { data: upcomingEvents } = useUserEvents('upcoming');
   const createPost = useCreatePost();
 
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [caption, setCaption] = useState("");
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(preSelectedEventId || null);
   const [location, setLocation] = useState<{ lat: number; lng: number; name: string; timestamp: string } | null>(null);
   const { toast } = useToast();
 
@@ -69,7 +72,8 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
       latitude: location?.lat?.toString(),
       longitude: location?.lng?.toString(),
       locationName: location?.name,
-      locationTimestamp: location?.timestamp
+      locationTimestamp: location?.timestamp,
+      eventId: selectedEventId || undefined
     }, {
       onSuccess: () => {
         onOpenChange(false);
@@ -77,6 +81,7 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
         setMedia([]);
         setCaption("");
         setSelectedPlaceId(null);
+        setSelectedEventId(null);
         setLocation(null);
       }
     });
@@ -155,15 +160,43 @@ export function CreatePostModal({ open, onOpenChange }: CreatePostModalProps) {
                 <span className="text-[10px] text-muted-foreground italic">GPS Verified</span>
               </div>
             )}
-
-            <Button
-              onClick={handleSubmit}
-              disabled={createPost.isPending || media.length === 0}
-              className="w-full py-6 rounded-xl font-bold text-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-            >
-              {createPost.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Share Moment"}
-            </Button>
           </div>
+
+          {/* Event Tagging */}
+          {upcomingEvents && upcomingEvents.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Tag Event
+              </label>
+              <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                {upcomingEvents.map(event => (
+                  <button
+                    key={event.id}
+                    onClick={() => setSelectedEventId(selectedEventId === event.id ? null : event.id)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
+                      selectedEventId === event.id
+                        ? "bg-purple-500 text-white shadow-md shadow-purple-500/20"
+                        : "bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200"
+                    )}
+                  >
+                    {event.name}
+                  </button>
+                ))}
+              </div>
+              {selectedEventId && (
+                <p className="text-xs text-purple-600">This moment will be linked to the event</p>
+              )}
+            </div>
+          )}
+
+          <Button
+            onClick={handleSubmit}
+            disabled={createPost.isPending || media.length === 0}
+            className="w-full py-6 rounded-xl font-bold text-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+          >
+            {createPost.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Share Moment"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

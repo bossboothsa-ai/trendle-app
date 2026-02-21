@@ -490,5 +490,397 @@ export async function registerRoutes(
   // Register admin routes
   registerAdminRoutes(app, storage);
 
+  // === EVENTS ===
+
+  // Get all events with filters
+  app.get(api.events.list.path, async (req, res) => {
+    try {
+      const filters = {
+        status: req.query.status as string | undefined,
+        category: req.query.category as string | undefined,
+        venueId: req.query.venueId ? Number(req.query.venueId) : undefined,
+        featured: req.query.featured === 'true' ? true : undefined,
+        trending: req.query.trending === 'true' ? true : undefined
+      };
+      const events = await storage.getEvents(filters);
+      res.json(events);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Get single event
+  app.get(api.events.get.path, async (req, res) => {
+    try {
+      const event = await storage.getEvent(Number(req.params.id), 1); // userId 1 for now
+      if (!event) return res.status(404).json({ message: "Event not found" });
+      res.json(event);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Create event
+  app.post(api.events.create.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const input = api.events.create.input.parse(req.body);
+      const eventData: any = {
+        ...input,
+        startDateTime: new Date(input.startDateTime),
+        endDateTime: new Date(input.endDateTime),
+        hostId: (req.user as any).id
+      };
+      // Convert latitude/longitude to string if present
+      if (eventData.latitude !== undefined) {
+        eventData.latitude = String(eventData.latitude);
+      }
+      if (eventData.longitude !== undefined) {
+        eventData.longitude = String(eventData.longitude);
+      }
+      const event = await storage.createEvent(eventData);
+      res.status(201).json(event);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
+  // Update event
+  app.put(api.events.update.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const id = Number(req.params.id);
+      const input = api.events.update.input.parse(req.body);
+
+      // Parse dates if provided
+      if (input.startDateTime) input.startDateTime = new Date(input.startDateTime) as any;
+      if (input.endDateTime) input.endDateTime = new Date(input.endDateTime) as any;
+
+      const event = await storage.updateEvent(id, input as any);
+      res.json(event);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(404).json({ message: "Event not found" });
+    }
+  });
+
+  // Delete event
+  app.delete(api.events.delete.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      await storage.deleteEvent(Number(req.params.id));
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(404).json({ message: "Event not found" });
+    }
+  });
+
+  // Attend event
+  app.post(api.events.attend.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      await storage.attendEvent(eventId, userId);
+      res.status(201).json({ success: true, message: "You're attending this event!" });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // Cancel attendance
+  app.post(api.events.cancelAttend.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      await storage.cancelAttendance(eventId, userId);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // Check-in to event
+  app.post(api.events.checkIn.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      const { method, latitude, longitude, qrCode } = req.body;
+      const result = await storage.checkInToEvent(eventId, userId, method, latitude, longitude, qrCode);
+      res.json(result);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // Get event attendees
+  app.get(api.events.attendees.path, async (req, res) => {
+    try {
+      const attendees = await storage.getEventAttendees(Number(req.params.id));
+      res.json(attendees);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Get event moments
+  app.get(api.events.moments.path, async (req, res) => {
+    try {
+      const moments = await storage.getEventMoments(Number(req.params.id));
+      res.json(moments);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Rate event
+  app.post(api.events.rate.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      const { rating, feedback } = req.body;
+      await storage.rateEvent(eventId, userId, rating, feedback);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // Get user's events
+  app.get(api.events.myEvents.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const status = req.params.status as 'upcoming' | 'attended' | 'all';
+      const userId = (req.user as any).id;
+      const userEvents = await storage.getUserEvents(userId, status);
+      res.json(userEvents);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Admin: Approve event
+  app.post(api.events.approve.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = req.user as any;
+    if (user.role !== 'admin') return res.sendStatus(403);
+    try {
+      const eventId = Number(req.params.id);
+      const { approved, rejectionReason } = req.body;
+      await storage.approveEvent(eventId, user.id, approved, rejectionReason);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // Admin: Get event analytics
+  app.get(api.events.analytics.path, async (req, res) => {
+    try {
+      const analytics = await storage.getEventAnalytics(Number(req.params.id));
+      res.json(analytics);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Admin: Platform-wide analytics
+  app.get(api.events.platformAnalytics.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = req.user as any;
+    if (user.role !== 'admin') return res.sendStatus(403);
+    try {
+      const analytics = await storage.getPlatformEventAnalytics();
+      res.json(analytics);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ========================================
+  // TRENDLE HOSTS
+  // ========================================
+
+  // Upgrade to host
+  app.post(api.hosts.upgrade.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const input = api.hosts.upgrade.input.parse(req.body);
+      const userId = (req.user as any).id;
+      
+      const updatedUser = await storage.upgradeToHost(userId, {
+        isHost: true,
+        hostName: input.hostName,
+        hostBio: input.hostBio,
+        hostCreatedAt: new Date(),
+      });
+      
+      res.json(updatedUser);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
+  // Get host profile
+  app.get(api.hosts.profile.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.json(user);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Update host profile
+  app.put(api.hosts.updateProfile.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const input = api.hosts.updateProfile.input.parse(req.body);
+      const userId = (req.user as any).id;
+      
+      const updatedUser = await storage.updateHostProfile(userId, input);
+      res.json(updatedUser);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
+  // Get host's events
+  app.get(api.hosts.events.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const userId = (req.user as any).id;
+      const status = req.query.status as string | undefined;
+      const events = await storage.getHostEvents(userId, status);
+      res.json(events);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Create host event
+  app.post(api.hosts.createEvent.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      // Check if user is a host
+      if (!user?.isHost) {
+        return res.status(403).json({ message: "You must be a host to create events" });
+      }
+
+      const input = api.hosts.createEvent.input.parse(req.body);
+      const eventData: any = {
+        ...input,
+        hostId: userId,
+        hostType: 'organizer',
+        hostName: user.hostName || user.username,
+        startDateTime: new Date(input.startDateTime),
+        endDateTime: new Date(input.endDateTime),
+      };
+      
+      const event = await storage.createEvent(eventData);
+      res.status(201).json(event);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
+  // Update host event
+  app.put(api.hosts.updateEvent.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      const input = api.hosts.updateEvent.input.parse(req.body);
+
+      // Parse dates if provided
+      if (input.startDateTime) input.startDateTime = new Date(input.startDateTime) as any;
+      if (input.endDateTime) input.endDateTime = new Date(input.endDateTime) as any;
+
+      const event = await storage.updateHostEvent(eventId, userId, input as any);
+      if (!event) return res.status(404).json({ message: "Event not found or access denied" });
+      res.json(event);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal Error" });
+    }
+  });
+
+  // Delete host event
+  app.delete(api.hosts.deleteEvent.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      await storage.deleteHostEvent(eventId, userId);
+      res.sendStatus(204);
+    } catch (err: any) {
+      res.status(404).json({ message: "Event not found or access denied" });
+    }
+  });
+
+  // Promote host event (pay-per-push)
+  app.post(api.hosts.promoteEvent.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const userId = (req.user as any).id;
+      const { tier, paymentMethod } = req.body;
+      
+      const result = await storage.promoteHostEvent(eventId, userId, tier, paymentMethod);
+      res.status(201).json(result);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  // Get promotion status
+  app.get(api.hosts.promotionStatus.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const eventId = Number(req.params.id);
+      const result = await storage.getPromotionStatus(eventId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Get host analytics
+  app.get(api.hosts.analytics.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const userId = (req.user as any).id;
+      const analytics = await storage.getHostAnalytics(userId);
+      res.json(analytics);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   return httpServer;
 }

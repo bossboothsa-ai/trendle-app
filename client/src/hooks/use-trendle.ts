@@ -570,6 +570,498 @@ export function useRedemptionHistory() {
 }
 
 // ============================================
+// EVENTS
+// ============================================
+
+export interface EventFilters {
+  status?: string;
+  category?: string;
+  venueId?: number;
+  featured?: boolean;
+  trending?: boolean;
+}
+
+export function useEvents(filters?: EventFilters) {
+  return useQuery({
+    queryKey: [api.events.list.path, filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.category) params.append("category", filters.category);
+      if (filters?.venueId) params.append("venueId", filters.venueId.toString());
+      if (filters?.featured) params.append("featured", "true");
+      if (filters?.trending) params.append("trending", "true");
+
+      const url = `${api.events.list.path}?${params.toString()}`;
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.events.list.responses[200].parse(data);
+    },
+  });
+}
+
+export function useEvent(id: number) {
+  return useQuery({
+    queryKey: [api.events.get.path, id],
+    queryFn: async () => {
+      const url = buildUrl(api.events.get.path, { id });
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return api.events.get.responses[200].parse(data);
+    },
+    enabled: !!id,
+  });
+}
+
+export function useEventMoments(eventId: number) {
+  return useQuery({
+    queryKey: [api.events.moments.path, eventId],
+    queryFn: async () => {
+      const url = buildUrl(api.events.moments.path, { id: eventId });
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.events.moments.responses[200].parse(data);
+    },
+    enabled: !!eventId,
+  });
+}
+
+export function useEventAttendees(eventId: number) {
+  return useQuery({
+    queryKey: [api.events.attendees.path, eventId],
+    queryFn: async () => {
+      const url = buildUrl(api.events.attendees.path, { id: eventId });
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.events.attendees.responses[200].parse(data);
+    },
+    enabled: !!eventId,
+  });
+}
+
+export function useUserEvents(status: 'upcoming' | 'attended' | 'all' = 'all') {
+  return useQuery({
+    queryKey: [api.events.myEvents.path, status],
+    queryFn: async () => {
+      const url = buildUrl(api.events.myEvents.path, { status });
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.events.myEvents.responses[200].parse(data);
+    },
+  });
+}
+
+export function useAttendEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (eventId: number) => {
+      const url = buildUrl(api.events.attend.path, { id: eventId });
+      const res = await apiRequest(api.events.attend.method, url);
+      return api.events.attend.responses[201].parse(await res.json());
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [api.events.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.events.get.path] });
+      toast({
+        title: "You're in!",
+        description: data.message,
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Could not attend event",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+export function useCancelAttendance() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (eventId: number) => {
+      const url = buildUrl(api.events.cancelAttend.path, { id: eventId });
+      const res = await apiRequest(api.events.cancelAttend.method, url);
+      return api.events.cancelAttend.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.events.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.events.get.path] });
+      toast({
+        title: "Attendance cancelled",
+        description: "You won't be attending this event.",
+      });
+    },
+  });
+}
+
+export function useCheckInToEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ eventId, method, latitude, longitude, qrCode }: {
+      eventId: number;
+      method: 'gps' | 'qr';
+      latitude?: number;
+      longitude?: number;
+      qrCode?: string;
+    }) => {
+      const url = buildUrl(api.events.checkIn.path, { id: eventId });
+      const res = await apiRequest(api.events.checkIn.method, url, {
+        body: JSON.stringify({ method, latitude, longitude, qrCode })
+      });
+      return api.events.checkIn.responses[200].parse(await res.json());
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [api.events.get.path] });
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      toast({
+        title: "Checked in!",
+        description: data.message,
+        className: "bg-accent text-white border-none font-bold",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Check-in failed",
+        description: err.message || "Could not check in",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+export function useCreateEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (eventData: any) => {
+      const res = await apiRequest(api.events.create.method, api.events.create.path, {
+        body: JSON.stringify(eventData),
+      });
+      return api.events.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.events.list.path] });
+      toast({
+        title: "Event created!",
+        description: "Your event has been submitted for approval.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Could not create event",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+export function useRateEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ eventId, rating, feedback }: {
+      eventId: number;
+      rating: number;
+      feedback?: string;
+    }) => {
+      const url = buildUrl(api.events.rate.path, { id: eventId });
+      const res = await apiRequest(api.events.rate.method, url, {
+        body: JSON.stringify({ rating, feedback }),
+      });
+      return api.events.rate.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thanks for rating!",
+        description: "Your feedback helps improve future events.",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Could not submit rating",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Platform Analytics (Admin)
+export function usePlatformEventAnalytics() {
+  return useQuery({
+    queryKey: [api.events.platformAnalytics.path],
+    queryFn: async () => {
+      const res = await apiRequest("GET", api.events.platformAnalytics.path);
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return api.events.platformAnalytics.responses[200].parse(data);
+    },
+  });
+}
+
+// ============================================
+// TRENDLE HOSTS
+// ============================================
+
+// Upgrade to host
+export function useUpgradeToHost() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: { hostName: string; hostBio?: string }) => {
+      const res = await apiRequest(api.hosts.upgrade.method, api.hosts.upgrade.path, data);
+      return api.hosts.upgrade.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      toast({
+        title: "You're now a Host! 🎉",
+        description: "You can now create and promote social experiences.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Upgrade Failed",
+        description: err.message || "Could not upgrade to host",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Get host profile
+export function useHostProfile() {
+  return useQuery({
+    queryKey: [api.hosts.profile.path],
+    queryFn: async () => {
+      const res = await apiRequest("GET", api.hosts.profile.path);
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return api.hosts.profile.responses[200].parse(data);
+    },
+  });
+}
+
+// Update host profile
+export function useUpdateHostProfile() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: { hostName?: string; hostBio?: string; hostAvatar?: string }) => {
+      const res = await apiRequest(api.hosts.updateProfile.method, api.hosts.updateProfile.path, data);
+      return api.hosts.updateProfile.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.users.me.path] });
+      toast({
+        title: "Profile Updated",
+        description: "Your host profile has been updated.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Update Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Get host's events
+export function useHostEvents(status?: 'upcoming' | 'completed' | 'cancelled') {
+  return useQuery({
+    queryKey: [api.hosts.events.path, status],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (status) params.append("status", status);
+      const url = `${api.hosts.events.path}?${params.toString()}`;
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      return api.hosts.events.responses[200].parse(data);
+    },
+  });
+}
+
+// Create host event
+export function useCreateHostEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (eventData: any) => {
+      const res = await apiRequest(api.hosts.createEvent.method, api.hosts.createEvent.path, {
+        body: JSON.stringify(eventData),
+      });
+      return api.hosts.createEvent.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hosts.events.path] });
+      toast({
+        title: "Event Created! 🎉",
+        description: "Your event has been created. Add a promotion to boost visibility.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Could not create event",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Update host event
+export function useUpdateHostEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const url = buildUrl(api.hosts.updateEvent.path, { id });
+      const res = await apiRequest(api.hosts.updateEvent.method, url, {
+        body: JSON.stringify(data),
+      });
+      return api.hosts.updateEvent.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hosts.events.path] });
+      toast({
+        title: "Event Updated",
+        description: "Your changes have been saved.",
+        className: "bg-primary text-white border-none",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Update Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Delete host event
+export function useDeleteHostEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.hosts.deleteEvent.path, { id });
+      await apiRequest(api.hosts.deleteEvent.method, url);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hosts.events.path] });
+      toast({
+        title: "Event Deleted",
+        description: "The event has been removed.",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Delete Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Promote host event (pay-per-push)
+export function usePromoteHostEvent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ eventId, tier, paymentMethod }: { eventId: number; tier: 'basic' | 'push' | 'featured'; paymentMethod: 'in_app' | 'invoice' }) => {
+      const url = buildUrl(api.hosts.promoteEvent.path, { id: eventId });
+      const res = await apiRequest(api.hosts.promoteEvent.method, url, {
+        body: JSON.stringify({ tier, paymentMethod }),
+      });
+      return api.hosts.promoteEvent.responses[201].parse(await res.json());
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [api.hosts.events.path] });
+      if (data.promotion.invoiceNumber) {
+        toast({
+          title: "Invoice Generated",
+          description: data.message,
+          className: "bg-primary text-white border-none",
+        });
+      } else {
+        toast({
+          title: "Event Promoted! 🚀",
+          description: data.message,
+          className: "bg-accent text-white border-none",
+        });
+      }
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Promotion Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Get promotion status
+export function usePromotionStatus(eventId: number) {
+  return useQuery({
+    queryKey: [api.hosts.promotionStatus.path, eventId],
+    queryFn: async () => {
+      const url = buildUrl(api.hosts.promotionStatus.path, { id: eventId });
+      const res = await apiRequest("GET", url);
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return api.hosts.promotionStatus.responses[200].parse(data);
+    },
+    enabled: !!eventId,
+  });
+}
+
+// Get host analytics
+export function useHostAnalytics() {
+  return useQuery({
+    queryKey: [api.hosts.analytics.path],
+    queryFn: async () => {
+      const res = await apiRequest("GET", api.hosts.analytics.path);
+      const data = await res.json();
+      if (isInDemoMode()) return data;
+      return api.hosts.analytics.responses[200].parse(data);
+    },
+  });
+}
+
+// ============================================
 // WALLET & CASHOUTS
 // ============================================
 

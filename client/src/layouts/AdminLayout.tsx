@@ -10,7 +10,8 @@ import {
     Settings,
     CreditCard,
     Activity,
-    Ghost
+    Ghost,
+    CalendarDays
 } from "lucide-react";
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,6 +38,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             items: [
                 { icon: Building2, label: "Businesses", path: "/admin/businesses" },
                 { icon: Users, label: "Users", path: "/admin/users" },
+                { icon: CalendarDays, label: "Events", path: "/admin/events" },
                 { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" }
             ]
         },

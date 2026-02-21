@@ -12,6 +12,7 @@ import Notifications from "@/pages/Notifications";
 import SurveysTasks from "@/pages/SurveysTasks";
 import SettingsPage from "@/pages/Settings";
 import Wallet from "@/pages/Wallet";
+import Events from "@/pages/Events";
 import BusinessOnboarding from "@/pages/business/BusinessOnboarding";
 import PendingApproval from "@/pages/business/PendingApproval";
 import BusinessDashboard from "@/pages/business/BusinessDashboard";
@@ -23,6 +24,8 @@ import AudienceInsights from "@/pages/business/AudienceInsights";
 import BusinessReports from "@/pages/business/Reports";
 import BusinessBilling from "@/pages/business/BillingSubscription";
 import BusinessSettings from "@/pages/business/Settings";
+import BusinessEvents from "@/pages/business/Events";
+import HostDashboard from "@/pages/HostDashboard";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminBusinesses from "@/pages/admin/Businesses";
 import BusinessDetails from "@/pages/admin/BusinessDetails";
@@ -31,6 +34,7 @@ import AdminActivityLogs from "@/pages/admin/ActivityLogs";
 import AdminModeration from "@/pages/admin/Moderation";
 import AdminSubscriptions from "@/pages/admin/Subscriptions";
 import AdminSettings from "@/pages/admin/Settings";
+import AdminEvents from "@/pages/admin/Events";
 import Unauthorized from "@/pages/Unauthorized";
 import { BusinessProvider } from "@/context/BusinessContext";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -91,6 +95,9 @@ function Router() {
         <Route path="/business/settings">
           <BusinessLayout><BusinessSettings /></BusinessLayout>
         </Route>
+        <Route path="/business/events">
+          <BusinessLayout><BusinessEvents /></BusinessLayout>
+        </Route>
 
         {/* === ADMIN SECTION === */}
         <Route path="/admin">
@@ -119,6 +126,9 @@ function Router() {
         </Route>
         <Route path="/admin/settings">
           <AdminLayout><AdminSettings /></AdminLayout>
+        </Route>
+        <Route path="/admin/events">
+          <AdminLayout><AdminEvents /></AdminLayout>
         </Route>
 
         {/* === USER SECTION (Root) === */}
@@ -151,6 +161,14 @@ function Router() {
         </Route>
         <Route path="/settings">
           <UserLayout><SettingsPage /></UserLayout>
+        </Route>
+        <Route path="/events">
+          <UserLayout><Events /></UserLayout>
+        </Route>
+
+        {/* === HOST SECTION === */}
+        <Route path="/host">
+          <UserLayout><HostDashboard /></UserLayout>
         </Route>
 
         {/* 404 - Last Resort */}

@@ -1,19 +1,25 @@
-import { Home, MapPin, PlusSquare, Gift, User, Settings, Wallet } from "lucide-react";
+import { Home, MapPin, PlusSquare, Gift, User, Settings, Wallet, CalendarDays, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CreatePostModal } from "./CreatePostModal";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useCurrentUser } from "@/hooks/use-trendle";
+import { useDemo } from "@/context/DemoContext";
 
 export function BottomNav() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [location] = useLocation();
+  const { data: currentUser } = useCurrentUser();
+  const { isDemoMode } = useDemo();
+
+  const showHost = isDemoMode || currentUser?.isHost;
 
   const navItems = [
     { icon: Home, label: "Feed", path: "/home" },
     { icon: MapPin, label: "Explore", path: "/explore" },
+    { icon: CalendarDays, label: "Events", path: "/events" },
     { icon: Gift, label: "Rewards", path: "/rewards" },
     { icon: Wallet, label: "Wallet", path: "/wallet" },
-    { icon: User, label: "Profile", path: "/profile" },
   ];
 
   return (
@@ -48,6 +54,25 @@ export function BottomNav() {
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           ))}
+
+          {/* Show Host Dashboard if user is a host or in demo mode */}
+          {showHost ? (
+            <Link href="/host" className={cn(
+              "flex-1 flex flex-col items-center justify-center gap-1 p-2 cursor-pointer transition-colors duration-200",
+              location === "/host" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}>
+              <Crown className="w-6 h-6" strokeWidth={location === "/host" ? 2.5 : 2} />
+              <span className="text-[10px] font-medium">Host</span>
+            </Link>
+          ) : (
+            <Link href="/profile" className={cn(
+              "flex-1 flex flex-col items-center justify-center gap-1 p-2 cursor-pointer transition-colors duration-200",
+              location === "/profile" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}>
+              <User className="w-6 h-6" strokeWidth={location === "/profile" ? 2.5 : 2} />
+              <span className="text-[10px] font-medium">Profile</span>
+            </Link>
+          )}
         </div>
       </div>
 
