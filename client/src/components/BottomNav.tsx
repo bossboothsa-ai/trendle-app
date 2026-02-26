@@ -24,7 +24,7 @@ export function BottomNav() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-border/50 pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 z-50 header-glow border-t border-white/5 pb-safe">
         <div className="flex items-center max-w-md mx-auto h-16 px-2">
           {navItems.slice(0, 2).map((item) => (
             <Link key={item.path} href={item.path} className={cn(

@@ -226,7 +226,7 @@ function EmptyHistory() {
             
             <div className="grid gap-3 text-left">
                 {/* Airtime Placeholder */}
-                <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
+                <div className="reward-card rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <PhoneCall className="w-5 h-5 text-blue-600" />
@@ -239,7 +239,7 @@ function EmptyHistory() {
                 </div>
 
                 {/* Cash Rewards Placeholder */}
-                <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
+                <div className="reward-card rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                             <Banknote className="w-5 h-5 text-green-600" />
@@ -252,7 +252,7 @@ function EmptyHistory() {
                 </div>
 
                 {/* Venue Discounts Placeholder */}
-                <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
+                <div className="reward-card rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
                             <Gift className="w-5 h-5 text-accent" />

@@ -69,7 +69,7 @@ export default function Profile() {
 
       <main>
         {/* Profile Header */}
-        <div className="bg-card rounded-3xl shadow-lg border border-border/50 mx-4 mb-8 p-6">
+        <div className="glass-card mx-4 mb-8 p-6">
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <div className="w-28 h-28 rounded-full p-[3px] bg-gradient-to-tr from-primary to-accent">

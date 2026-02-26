@@ -24,7 +24,7 @@ export function Header({
 
     return (
         <header className={cn(
-            "sticky top-0 z-[9999] w-full bg-white/80 backdrop-blur-md border-b border-border/50 px-4 py-3",
+            "sticky top-0 z-[9999] w-full header-glow px-4 py-3",
             className
         )}>
             <div className="flex items-center justify-between max-w-md mx-auto">

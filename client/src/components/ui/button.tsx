@@ -10,17 +10,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 border border-transparent shadow-md shadow-primary/20",
+          "btn-primary",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 border border-transparent shadow-md",
         outline:
-          "border border-border/50 bg-background hover:bg-muted text-foreground",
+          "border border-white/10 bg-black/20 hover:bg-white/10 text-white backdrop-blur-md",
         secondary: 
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-transparent",
+          "bg-white/10 text-white hover:bg-white/20 border border-white/5 backdrop-blur-md",
         ghost: 
-          "hover:bg-muted/50 text-muted-foreground hover:text-foreground shadow-none",
+          "hover:bg-white/10 text-muted-foreground hover:text-white shadow-none",
         link: 
-          "text-primary underline-offset-4 hover:underline shadow-none",
+          "text-purple-electric underline-offset-4 hover:underline shadow-none",
       },
       size: {
         default: "h-12 px-6 py-2 w-full sm:w-auto", // md size mapped to default for backward compatibility

@@ -122,7 +122,7 @@ export function PostCard({ post }: PostCardProps) {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-card rounded-3xl overflow-hidden shadow-lg border border-border/50 mb-8 mx-4"
+      className="post-card rounded-3xl overflow-hidden mb-8 mx-4"
     >
       {/* User Header */}
       <div className="p-4 flex items-center justify-between border-b border-border/50 bg-card/30 backdrop-blur-sm">
