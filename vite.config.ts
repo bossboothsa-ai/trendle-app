@@ -12,6 +12,7 @@ export default defineConfig({
   ],
   define: {
     'process.env.APP_MODE': JSON.stringify(process.env.APP_MODE || 'production'),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
   },
   resolve: {
     alias: {
