@@ -3,7 +3,7 @@ import { LayoutDashboard, Store, Users, BarChart3, Settings, LogOut, Camera, Fil
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useDemo } from "@/context/DemoContext";
+import { useLaunch } from "@/context/LaunchContext";
 
 interface BusinessLayoutProps {
     children: ReactNode;
@@ -12,7 +12,7 @@ interface BusinessLayoutProps {
 export default function BusinessLayout({ children }: BusinessLayoutProps) {
     const [location] = useLocation();
     const { logoutMutation, user } = useAuth();
-    const { isDemoMode } = useDemo();
+    const { isSoftLaunch } = useLaunch();
 
     const navItems = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/business/dashboard" },

@@ -542,6 +542,9 @@ export const insertUserSchema = createInsertSchema(users, {
   interests: z.array(z.string()),
   notificationSettings: z.any(),
   privacySettings: z.any(),
+  hostMembershipTier: z.enum(hostMembershipTiers).nullable().optional(),
+  hostApplicationStatus: z.enum(hostApplicationStatuses).nullable().optional(),
+  hostCategories: z.array(z.enum(hostCategories)).nullable().optional(),
 }).omit({ id: true, points: true, level: true });
 
 export const insertPlaceSchema = createInsertSchema(places, {

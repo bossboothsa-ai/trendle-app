@@ -48,7 +48,7 @@ export interface IStorage {
   getRewardHistory(userId: number): Promise<(UserReward & { reward: Reward })[]>;
   getCashouts(userId: number): Promise<Cashout[]>;
   createCashout(cashout: Partial<Cashout>): Promise<Cashout>;
-  // updateCashoutStatus(id: number, status: string, reason?: string): Promise<Cashout>; // Removed consistency check - keeping simple
+  updateCashoutStatus(id: number, status: string, reason?: string): Promise<Cashout>;
   getTransactions(userId: number): Promise<any[]>;
 
   // Surveys
@@ -571,6 +571,15 @@ export class DatabaseStorage implements IStorage {
   async createCashout(cashout: Partial<Cashout>): Promise<Cashout> {
     const [newCashout] = await db.insert(cashouts).values(cashout as any).returning();
     return newCashout;
+  }
+  
+  async updateCashoutStatus(id: number, status: string, reason?: string): Promise<Cashout> {
+    const [updated] = await db.update(cashouts)
+      .set({ status, reason, updatedAt: new Date() })
+      .where(eq(cashouts.id, id))
+      .returning();
+    if (!updated) throw new Error("Cashout not found");
+    return updated;
   }
 
   async getTransactions(userId: number): Promise<any[]> {
