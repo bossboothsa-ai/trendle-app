@@ -63,7 +63,7 @@
       var(--bg-main);
     background-attachment: fixed;
     color: var(--text-primary);
-    @apply antialiased selection:bg-purple-electric/30 selection:text-white pb-24 md:pb-0;
+    @apply antialiased selection:bg-[#8B5CF6]/30 selection:text-white pb-24 md:pb-0;
     font-family: var(--font-body);
   }
 
@@ -109,7 +109,8 @@
   
   .nav-item-active::after {
     content: '';
-    @apply absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-purple-electric;
+    @apply absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full;
+    background: var(--purple-electric);
     box-shadow: 0 0 5px var(--purple-electric);
   }
 

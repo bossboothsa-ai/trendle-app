@@ -12,9 +12,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
             {/* Background Particles (Phase 8: Subtle Glow Base) */}
             <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
                 <div className="absolute top-[20%] left-[10%] w-2 h-2 rounded-full bg-white/20 blur-[2px] animate-float opacity-30" />
-                <div className="absolute top-[70%] right-[15%] w-3 h-3 rounded-full bg-purple-electric/20 blur-[3px] animate-[float_40s_ease-in-out_infinite_alternate] opacity-40" />
-                <div className="absolute top-[40%] right-[40%] w-1.5 h-1.5 rounded-full bg-pink-accent/20 blur-[1px] animate-[float_25s_ease-in-out_infinite_alternate] opacity-30" />
-                <div className="absolute bottom-[20%] left-[30%] w-2.5 h-2.5 rounded-full bg-lavender/10 blur-[2px] animate-float opacity-20" style={{ animationDelay: '5s' }} />
+                <div className="absolute top-[70%] right-[15%] w-3 h-3 rounded-full bg-[#8B5CF6]/20 blur-[3px] animate-[float_40s_ease-in-out_infinite_alternate] opacity-40" />
+                <div className="absolute top-[40%] right-[40%] w-1.5 h-1.5 rounded-full bg-[#EC4899]/20 blur-[1px] animate-[float_25s_ease-in-out_infinite_alternate] opacity-30" />
+                <div className="absolute bottom-[20%] left-[30%] w-2.5 h-2.5 rounded-full bg-[#C4B5FD]/10 blur-[2px] animate-float opacity-20" style={{ animationDelay: '5s' }} />
             </div>
 
             {/* Main Content Area */}
