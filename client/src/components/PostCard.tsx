@@ -132,8 +132,8 @@ export function PostCard({ post }: PostCardProps) {
             <AvatarFallback>{post.author.username[0]}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-bold text-sm leading-none group-hover/author:text-primary transition-colors">{post.author.username}</span>
-            <span className="text-[10px] text-muted-foreground mt-1">
+            <span className="font-bold text-sm leading-none group-hover/author:text-primary transition-colors truncate-name">{post.author.username}</span>
+            <span className="text-[10px] text-weight-regular text-muted-foreground mt-1">
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </span>
           </div>
@@ -165,8 +165,8 @@ export function PostCard({ post }: PostCardProps) {
         )}
       </div>
 
-      {/* Media Carousel */}
-      <div className="w-full bg-black/5 relative aspect-[4/5] sm:aspect-square overflow-hidden bg-muted/30">
+      {/* Media Carousel - Enforced 1/1 Ratio */}
+      <div className="w-full bg-black/5 relative aspect-square overflow-hidden bg-muted/30">
         {post.media && post.media.length > 1 ? (
           <Carousel className="w-full h-full group/carousel">
             <CarouselContent className="h-full ml-0">
@@ -257,9 +257,11 @@ export function PostCard({ post }: PostCardProps) {
 
       {/* Content */}
       <div className="p-6 space-y-4">
-        {/* Caption/Title */}
+        {/* Caption - Using Medium weight for body text per audit */}
         <div>
-          <h3 className="text-xl font-bold font-display mb-2">{post.caption}</h3>
+          <h3 className="text-base text-weight-medium font-body mb-2 leading-snug line-clamp-2">
+            {post.caption}
+          </h3>
         </div>
 
         {/* Place Name */}
@@ -296,13 +298,13 @@ export function PostCard({ post }: PostCardProps) {
               onClick={handleShare}
               className="group flex items-center gap-2"
             >
-              <Share2 className="w-7 h-7 text-foreground group-hover:text-primary transition-colors" />
+              <Share2 className="w-6 h-6 text-foreground group-hover:text-primary transition-colors" />
             </button>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="text-muted-foreground hover:text-foreground focus:outline-none p-1">
-                <MoreHorizontal className="w-5 h-5" />
+                <MoreHorizontal className="w-5 h-5 opacity-50 hover:opacity-100" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-border/50">

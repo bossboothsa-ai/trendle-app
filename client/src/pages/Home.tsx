@@ -96,8 +96,12 @@ export default function Home() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : posts?.length === 0 ? (
-            <div className="text-center py-20 px-6">
-              <p className="text-muted-foreground">Discovery is just beginning! Be the first to capture a vibe in your area.</p>
+            <div className="text-center py-20 px-8 mx-4 bg-muted/10 rounded-3xl border border-dashed border-border">
+              <Compass className="w-10 h-10 mx-auto mb-4 text-primary/30" />
+              <h3 className="text-lg text-weight-bold mb-2">Discovery is beginning!</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Moments in your area are starting to trend. Be the first to capture the vibe!
+              </p>
             </div>
           ) : (
             posts?.map((post, index) => (

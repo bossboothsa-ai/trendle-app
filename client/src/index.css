@@ -82,6 +82,28 @@
     content: '';
     @apply absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary;
   }
+
+  /* Layout Discipline */
+  .layout-unit {
+    @apply p-4 md:p-6; /* 16px to 24px */
+  }
+
+  .section-gap {
+    @apply space-y-6; /* 24px */
+  }
+
+  .screen-padding {
+    @apply px-4; /* 16px standard mobile padding */
+  }
+
+  .truncate-name {
+    @apply max-w-[140px] truncate block;
+  }
+
+  /* Typography Hierarchy */
+  .text-weight-bold { @apply font-bold; }
+  .text-weight-medium { @apply font-semibold; }
+  .text-weight-regular { @apply font-normal; }
 }
 
 /* Animations */

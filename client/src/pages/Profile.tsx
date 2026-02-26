@@ -115,111 +115,107 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Stats */}
-            <div className="grid grid-cols-5 gap-4 w-full pt-4 border-t border-border/50">
+            {/* Stats - Refined 4-column grid for standard alignment */}
+            <div className="grid grid-cols-4 gap-2 w-full pt-6 border-t border-border/50">
               <div className="text-center">
-                <div className="font-bold text-xl">{user?.points || 0}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Points</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-xl">127</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
-                  <MapPin className="w-3 h-3" />
+                <div className="font-bold text-lg text-weight-bold">127</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-1 mt-1">
                   Visits
                 </div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-xl">{myPosts.length}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">Moments</div>
+                <div className="font-bold text-lg text-weight-bold">{myPosts.length}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Moments</div>
               </div>
-              {user?.isHost && (
-                <>
-                  <div className="text-center">
-                    <div className="font-bold text-xl">{totalEventsHosted}</div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Events
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-xl">{totalAttendees}</div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
-                      <Users className="w-3 h-3" />
-                      Attendees
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="text-center">
+                <div className="font-bold text-lg text-weight-bold">{totalEventsHosted}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Events</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-lg text-weight-bold">{totalAttendees}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">People</div>
+              </div>
             </div>
 
             {isMe ? (
-              <div className="space-y-3 w-full">
-                {/* Host Actions - Show if user is a host */}
-                {currentUser?.isHost && (
+              <div className="space-y-4 w-full pt-2">
+                {/* Host Actions - Integrated into header block */}
+                {currentUser?.isHost ? (
                   <div className="grid grid-cols-2 gap-3">
                     <Button
                       onClick={() => setShowCreateEvent(true)}
-                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-accent hover:opacity-90 rounded-full text-sm font-medium w-full justify-center"
+                      className="flex items-center gap-2 px-6 py-3 bg-primary text-white hover:opacity-90 rounded-2xl text-sm font-bold w-full justify-center shadow-md"
                     >
                       <Calendar className="w-4 h-4" />
                       Create Event
                     </Button>
                     <Link
                       href="/host"
-                      className="flex items-center gap-2 px-6 py-3 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors w-full justify-center"
+                      className="flex items-center gap-2 px-6 py-3 bg-muted rounded-2xl text-sm font-bold hover:bg-muted/80 transition-colors w-full justify-center"
                     >
                       <Crown className="w-4 h-4 text-muted-foreground" />
-                      Host Dashboard
+                      Host Panel
                     </Link>
                   </div>
+                ) : (
+                  <>
+                    {/* Host Application Status Card - Audit Fix #7 */}
+                    {currentUser?.hostApplicationStatus === "pending" ? (
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 transition-all">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center animate-pulse">
+                            <Calendar className="w-4 h-4 text-slate-500" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-slate-800">Application Under Review</h4>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                              <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">Status: Waiting Approval</span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          Your Social Host application is being verified. Approval takes 24–48 hours after payment check.
+                        </p>
+                        <div className="flex items-center gap-1 mt-3">
+                          <div className="h-1 flex-1 bg-green-500 rounded-full" />
+                          <div className="h-1 flex-1 bg-blue-500 rounded-full animate-pulse" />
+                          <div className="h-1 flex-1 bg-slate-200 rounded-full" />
+                        </div>
+                      </div>
+                    ) : currentUser?.hostApplicationStatus === "rejected" ? (
+                      <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
+                        <h4 className="text-sm font-bold text-red-800">Application Correction Needed</h4>
+                        <p className="text-xs text-red-600 mt-1 mb-3">Please review your submission and reapply in 7 days.</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full rounded-xl border-red-200 text-red-700 font-bold h-9"
+                          onClick={() => setShowHostApplication(true)}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => setShowHostApplication(true)}
+                        className="w-full py-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-2xl text-sm font-bold text-yellow-700 hover:from-yellow-500/20 hover:to-orange-500/20 transition-all flex items-center gap-2"
+                      >
+                        <Crown className="w-4 h-4 text-yellow-600" />
+                        Become a Host
+                      </Button>
+                    )}
+                  </>
                 )}
 
-                {/* Host Application Status - Show if application is pending */}
-                {!currentUser?.isHost && currentUser?.hostApplicationStatus === "pending" && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-800 text-center">
-                    <p className="font-medium">Application Pending Review</p>
-                    <p className="text-xs mt-1">Approval typically takes 24-48 hours</p>
-                  </div>
-                )}
-
-                {/* Host Rejected Status - Show if application was rejected */}
-                {!currentUser?.isHost && currentUser?.hostApplicationStatus === "rejected" && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-full text-sm text-red-800 text-center">
-                    <p className="font-medium">Application Rejected</p>
-                    <p className="text-xs mt-1">You can reapply after 7 days</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 text-xs"
-                      onClick={() => setShowHostApplication(true)}
-                    >
-                      Reapply
-                    </Button>
-                  </div>
-                )}
-
-                {/* Host Application Button - Show if not already a host and no pending application */}
-                {!currentUser?.isHost && !currentUser?.hostApplicationStatus && (
-                  <button
-                    onClick={() => {
-                      console.log("Become a Host button clicked");
-                      setShowHostApplication(true);
-                      console.log("showHostApplication state:", showHostApplication);
-                    }}
-                    className="mt-4 flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full text-sm font-medium hover:from-yellow-500/30 hover:to-orange-500/30 transition-colors w-full justify-center"
-                  >
-                    <Crown className="w-4 h-4 text-yellow-600" />
-                    Become a Host
-                  </button>
-                )}
-
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setShowEditProfile(true)}
-                  className="flex items-center gap-2 px-8 py-3 bg-muted rounded-full text-sm font-medium hover:bg-muted/80 transition-colors w-full justify-center"
+                  className="w-full py-6 bg-muted/30 rounded-2xl text-sm font-bold text-muted-foreground hover:bg-muted/50 transition-all flex items-center gap-2"
                 >
                   <Edit3 className="w-4 h-4" />
                   Edit Profile
-                </button>
+                </Button>
               </div>
             ) : (
               <Button
@@ -259,8 +255,12 @@ export default function Profile() {
             <PostCard key={post.id} post={post as any} />
           ))}
           {myPosts.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No moments yet.</p>
+            <div className="text-center py-20 px-8 text-muted-foreground bg-muted/10 mx-4 rounded-3xl border border-dashed border-border">
+              <Sparkles className="w-8 h-8 mx-auto mb-4 text-primary/30" />
+              <h4 className="text-weight-bold text-foreground mb-1">Begin your Discovery</h4>
+              <p className="text-xs leading-relaxed max-w-[200px] mx-auto">
+                Capture your first vibe to share with the Trendle community.
+              </p>
             </div>
           )}
         </div>

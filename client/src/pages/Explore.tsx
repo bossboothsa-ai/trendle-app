@@ -92,8 +92,8 @@ export default function Explore() {
                     <span className="text-sm font-bold">4.8</span>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mb-1 font-display">{place.name}</h3>
-                <div className="flex items-center gap-4 text-sm text-gray-300">
+                <h3 className="text-2xl text-weight-bold mb-1 font-display">{place.name}</h3>
+                <div className="flex items-center gap-4 text-sm text-weight-regular text-gray-300">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     <span>{place.distance}</span>

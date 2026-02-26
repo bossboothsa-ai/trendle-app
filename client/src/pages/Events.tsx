@@ -201,10 +201,12 @@ export default function Events() {
                             ))}
                         </div>
                     ) : filteredEvents.length === 0 ? (
-                        <div className="text-center py-16">
-                            <Calendar className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
-                            <p className="font-medium text-muted-foreground">No events found</p>
-                            <p className="text-sm text-muted-foreground/60 mt-1">Try a different filter or check back soon</p>
+                        <div className="text-center py-20 px-8 mx-4 bg-muted/10 rounded-3xl border border-dashed border-border">
+                            <Calendar className="w-10 h-10 mx-auto mb-4 text-primary/30" />
+                            <h3 className="text-lg text-weight-bold mb-2 font-display">Something is brewing!</h3>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Events around you are starting to trend. Check back soon or be the first to host!
+                            </p>
                         </div>
                     ) : (
                         <div className="space-y-4">

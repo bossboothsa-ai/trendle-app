@@ -42,7 +42,7 @@ export function SuggestedUsers() {
                                 <AvatarImage src={user.avatar} className="rounded-full overflow-hidden" />
                                 <AvatarFallback>{user.username[0]}</AvatarFallback>
                             </Avatar>
-                            <div className="font-bold text-sm truncate w-full mb-1">{user.username}</div>
+                            <div className="font-bold text-sm truncate-name w-full mb-1">{user.username}</div>
                             <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">
                                 {user.level}
                             </div>
