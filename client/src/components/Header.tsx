@@ -24,21 +24,21 @@ export function Header({
 
     return (
         <header className={cn(
-            "sticky top-0 z-[9999] w-full header-glow px-4 py-3",
+            "sticky top-0 z-[9999] w-full header-glow h-16 px-4 flex items-center",
             className
         )}>
-            <div className="flex items-center justify-between max-w-md mx-auto">
+            <div className="flex items-center justify-between w-full max-w-md mx-auto">
                 <Link href="/home">
                     <h1 className="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent cursor-pointer">
                         {title}
                     </h1>
                 </Link>
                 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                     {showBusiness && (
                         <Link href="/business/login">
                             <button 
-                                className="p-2 hover:bg-muted rounded-full transition-colors" 
+                                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors" 
                                 title="Business Portal"
                             >
                                 <Briefcase className="w-5 h-5 text-foreground" />
@@ -49,7 +49,7 @@ export function Header({
                     {showSearch && (
                         <button
                             onClick={() => toast({ title: "Coming Soon", description: "Search feature is under development." })}
-                            className="p-2 hover:bg-muted rounded-full transition-colors"
+                            className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
                         >
                             <Search className="w-5 h-5 text-foreground" />
                         </button>
@@ -57,7 +57,7 @@ export function Header({
 
                     {showMessages && (
                         <Link href="/messages">
-                            <button className="p-2 hover:bg-muted rounded-full transition-colors relative">
+                            <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors relative">
                                 <MessageSquare className="w-5 h-5 text-foreground" />
                             </button>
                         </Link>
@@ -65,9 +65,9 @@ export function Header({
                     
                     {showNotifications && (
                         <Link href="/notifications">
-                            <button className="p-2 hover:bg-muted rounded-full transition-colors relative">
+                            <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors relative">
                                 <Bell className="w-5 h-5 text-foreground" />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[var(--bg-surface)]"></span>
                             </button>
                         </Link>
                     )}

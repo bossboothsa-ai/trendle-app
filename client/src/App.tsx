@@ -49,9 +49,11 @@ import UserLayout from "@/layouts/UserLayout";
 import BusinessLayout from "@/layouts/BusinessLayout";
 import AdminLayout from "@/layouts/AdminLayout";
 
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
 function Router() {
   return (
-    <>
+    <ErrorBoundary>
       <Switch>
         {/* === PUBLIC & AUTH === */}
         <Route path="/user/login" component={AuthPage} />
@@ -182,7 +184,7 @@ function Router() {
         {/* 404 - Last Resort */}
         <Route component={NotFound} />
       </Switch>
-    </>
+    </ErrorBoundary>
   );
 }
 

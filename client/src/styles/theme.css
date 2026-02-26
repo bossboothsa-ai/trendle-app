@@ -1,0 +1,67 @@
+:root {
+  --bg-main: #0B061A;
+  --bg-surface: #140A2E;
+
+  --purple-primary: #7C3AED;
+  --purple-electric: #8B5CF6;
+  --lavender: #C4B5FD;
+  --pink-accent: #EC4899;
+
+  --text-primary: #ffffff;
+  --text-secondary: #C9C6FF;
+  --text-muted: #8B85C9;
+  
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+}
+
+body {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(139,92,246,0.25), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(236,72,153,0.18), transparent 45%),
+    var(--bg-main) !important;
+  background-attachment: fixed !important;
+  color: var(--text-primary) !important;
+}
+
+.card {
+  background: rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 16px !important;
+}
+
+button {
+  color: white !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #7C3AED, #A855F7, #EC4899) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 20px rgba(139,92,246,0.5), 0 10px 30px rgba(76,29,149,0.45) !important;
+}
+
+/* Global Theme Overrides for hardcoded colors */
+.bg-white, .bg-black, .bg-gray-50, .bg-gray-100, .bg-background {
+  background-color: transparent !important;
+}
+
+.text-gray-500, .text-gray-900, .text-black {
+  color: var(--text-primary) !important;
+}
+
+/* Spacing Scale Overrides (Global fix for oversized gaps) */
+.p-8, .p-6 { padding: var(--space-4) !important; }
+.px-8, .px-6 { padding-left: var(--space-4) !important; padding-right: var(--space-4) !important; }
+.py-8, .py-6 { padding-top: var(--space-4) !important; padding-bottom: var(--space-4) !important; }
+.gap-8, .gap-6 { gap: var(--space-4) !important; }
+.space-y-8 > :not([hidden]) ~ :not([hidden]), .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--space-4) !important;
+}
+.mt-10, .mt-8 { margin-top: var(--space-4) !important; }
