@@ -15,6 +15,8 @@ services:
         generateValue: true
       - key: PORT
         value: 5001
+      - key: APP_MODE
+        value: soft_launch
 
 databases:
   - name: trendle-db
