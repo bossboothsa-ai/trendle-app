@@ -6,6 +6,7 @@ import {
   insertRewardSchema,
   insertSurveyResponseSchema,
   insertStorySchema,
+  insertHostApplicationSchema,
   users,
   places,
   posts,
@@ -26,6 +27,9 @@ import {
   eventStatuses,
   checkInMethods,
   hostCategories,
+  hostMembershipTiers,
+  hostApplicationStatuses,
+  hostMembershipPlans,
   eventPromotionTiers,
 } from './schema';
 
@@ -348,6 +352,115 @@ export const api = {
     }
   },
 
+  // === HOST APPLICATIONS ===
+  hostApplications: {
+    create: {
+      method: 'POST' as const,
+      path: '/api/host/applications' as const,
+      input: insertHostApplicationSchema,
+      responses: {
+        201: z.object({ success: z.boolean(), message: z.string() }),
+        400: errorSchemas.validation,
+      },
+    },
+    list: {
+      method: 'GET' as const,
+      path: '/api/host/applications' as const,
+      responses: {
+        200: z.array(z.custom<typeof users.$inferSelect & {
+          hostApplicationStatus: string;
+          hostApplicationDate: string;
+          hostMembershipTier: string;
+          paymentReference: string;
+          proofOfPayment: string;
+          paymentVerified: boolean;
+        }>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/host/applications/:id' as const,
+      responses: {
+        200: z.custom<typeof users.$inferSelect & {
+          hostApplicationStatus: string;
+          hostApplicationDate: string;
+          hostMembershipTier: string;
+          paymentReference: string;
+          proofOfPayment: string;
+          paymentVerified: boolean;
+        }>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    approve: {
+      method: 'POST' as const,
+      path: '/api/host/applications/:id/approve' as const,
+      responses: {
+        200: z.object({ success: z.boolean(), message: z.string() }),
+        404: errorSchemas.notFound,
+      },
+    },
+    reject: {
+      method: 'POST' as const,
+      path: '/api/host/applications/:id/reject' as const,
+      input: z.object({ reason: z.string().optional() }),
+      responses: {
+        200: z.object({ success: z.boolean(), message: z.string() }),
+        404: errorSchemas.notFound,
+      },
+    },
+    requestCorrection: {
+      method: 'POST' as const,
+      path: '/api/host/applications/:id/request-correction' as const,
+      input: z.object({ message: z.string() }),
+      responses: {
+        200: z.object({ success: z.boolean(), message: z.string() }),
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+
+  // === HOST MEMBERSHIP ===
+  hostMembership: {
+    plans: {
+      method: 'GET' as const,
+      path: '/api/host/plans' as const,
+      responses: {
+        200: z.object({
+          starter: z.object({ name: z.string(), price: z.number(), maxEvents: z.number(), description: z.string() }),
+          active: z.object({ name: z.string(), price: z.number(), maxEvents: z.number(), description: z.string() }),
+          pro: z.object({ name: z.string(), price: z.number(), maxEvents: z.number(), description: z.string() }),
+        }),
+      },
+    },
+    current: {
+      method: 'GET' as const,
+      path: '/api/host/membership' as const,
+      responses: {
+        200: z.object({
+          tier: z.enum(hostMembershipTiers).optional(),
+          status: z.string(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+          maxEvents: z.number(),
+          usedEvents: z.number(),
+        }),
+      },
+    },
+    uploadProof: {
+      method: 'POST' as const,
+      path: '/api/host/membership/upload-proof' as const,
+      input: z.object({
+        paymentReference: z.string(),
+        proofOfPayment: z.string(), // URL to file
+      }),
+      responses: {
+        200: z.object({ success: z.boolean(), message: z.string() }),
+        400: errorSchemas.validation,
+      },
+    },
+  },
+
   // === EVENTS ===
   events: {
     list: {
@@ -656,36 +769,7 @@ export const api = {
         204: z.null(),
         404: errorSchemas.notFound,
       }
-    },
-    // Promote event (pay-per-push)
-    promoteEvent: {
-      method: 'POST' as const,
-      path: '/api/hosts/events/:id/promote' as const,
-      input: z.object({
-        tier: z.enum(eventPromotionTiers),
-        paymentMethod: z.enum(['in_app', 'invoice']),
-      }),
-      responses: {
-        201: z.object({
-          promotion: z.object({
-            id: z.number(),
-            tier: z.string(),
-            amount: z.number(),
-            invoiceNumber: z.string().optional(),
-            invoiceUrl: z.string().optional(),
-          }),
-          message: z.string(),
-        }),
-        400: z.object({ message: z.string() }),
-      }
-    },
-    // Get promotion status
-    promotionStatus: {
-      method: 'GET' as const,
-      path: '/api/hosts/events/:id/promotion' as const,
-      responses: {
-        200: z.any(),
-      }
+
     },
     // Get host analytics
     analytics: {
@@ -707,9 +791,25 @@ export const api = {
           })),
         }),
       }
+    },
+    // Get promotion status
+    promotionStatus: {
+      method: 'GET' as const,
+      path: '/api/hosts/events/:id/promotion' as const,
+      responses: {
+        200: z.object({
+          active: z.boolean(),
+          tier: z.string(),
+          expiresAt: z.string().optional(),
+          insights: z.object({
+            reaches: z.number(),
+            clicks: z.number(),
+          }).optional(),
+        }),
+      }
     }
-  }
-};
+  },
+}
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
   let url = path;

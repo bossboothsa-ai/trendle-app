@@ -35,10 +35,11 @@ import AdminModeration from "@/pages/admin/Moderation";
 import AdminSubscriptions from "@/pages/admin/Subscriptions";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminEvents from "@/pages/admin/Events";
+import AdminHostApplications from "@/pages/admin/HostApplications";
 import Unauthorized from "@/pages/Unauthorized";
 import { BusinessProvider } from "@/context/BusinessContext";
 import { AuthProvider } from "@/hooks/use-auth";
-import { DemoProvider } from "@/context/DemoContext";
+import { LaunchProvider } from "@/context/LaunchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AuthPage from "@/pages/AuthPage";
 import VerifyEmail from "@/pages/VerifyEmail";
@@ -130,6 +131,9 @@ function Router() {
         <Route path="/admin/events">
           <AdminLayout><AdminEvents /></AdminLayout>
         </Route>
+        <Route path="/admin/host-applications">
+          <AdminLayout><AdminHostApplications /></AdminLayout>
+        </Route>
 
         {/* === USER SECTION (Root) === */}
         <Route path="/">
@@ -183,12 +187,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BusinessProvider>
-          <DemoProvider>
+          <LaunchProvider>
             <TooltipProvider>
               <Toaster />
               <Router />
             </TooltipProvider>
-          </DemoProvider>
+          </LaunchProvider>
         </BusinessProvider>
       </AuthProvider>
     </QueryClientProvider>

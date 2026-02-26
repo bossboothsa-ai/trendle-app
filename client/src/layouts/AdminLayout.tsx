@@ -39,6 +39,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 { icon: Building2, label: "Businesses", path: "/admin/businesses" },
                 { icon: Users, label: "Users", path: "/admin/users" },
                 { icon: CalendarDays, label: "Events", path: "/admin/events" },
+                { icon: Ghost, label: "Host Applications", path: "/admin/host-applications" },
                 { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" }
             ]
         },

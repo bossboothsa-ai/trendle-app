@@ -6,16 +6,21 @@ import { z } from "zod";
 // === TABLE DEFINITIONS ===
 
 export const hostCategories = [
-  "Ladies Night",
+  "Social",
   "Networking",
-  "Rave / DJ Night",
-  "Comedy",
-  "Book Club",
-  "Social Meetup",
+  "Nightlife",
+  "Wellness",
+  "Community",
   "Other"
 ] as const;
 
 export type HostCategory = typeof hostCategories[number];
+
+export const hostMembershipTiers = ["starter", "active", "pro"] as const;
+export type HostMembershipTier = typeof hostMembershipTiers[number];
+
+export const hostApplicationStatuses = ["pending", "approved", "rejected"] as const;
+export type HostApplicationStatus = typeof hostApplicationStatuses[number];
 
 export const eventPromotionTiers = ["basic", "push", "featured"] as const;
 export type EventPromotionTier = typeof eventPromotionTiers[number];
@@ -34,6 +39,19 @@ export const users = pgTable("users", {
   hostAvatar: text("host_avatar"), // Optional separate avatar for host
   hostVerified: boolean("host_verified").default(false).notNull(), // Verified host status
   hostCreatedAt: timestamp("host_created_at"), // When user became a host
+  // Host membership fields
+  hostMembershipTier: text("host_membership_tier").$type<HostMembershipTier>(), // starter, active, pro
+  hostMembershipStatus: text("host_membership_status").default("inactive").notNull(), // inactive, active, suspended
+  hostApplicationStatus: text("host_application_status").$type<HostApplicationStatus>(), // pending, approved, rejected
+  hostApplicationDate: timestamp("host_application_date"), // When application was submitted
+  hostMembershipStartDate: timestamp("host_membership_start_date"), // When membership became active
+  hostMembershipEndDate: timestamp("host_membership_end_date"), // When membership expires
+  hostCategories: jsonb("host_categories").$type<HostCategory[]>(), // Selected event categories
+  // Payment fields
+  paymentReference: text("payment_reference"), // Unique payment reference number
+  proofOfPayment: text("proof_of_payment"), // URL to proof of payment document
+  paymentVerified: boolean("payment_verified").default(false).notNull(), // Whether payment has been verified
+  paymentDate: timestamp("payment_date"), // When payment was received
   // End host fields
   emailVerified: boolean("email_verified").default(false).notNull(),
   verificationToken: text("verification_token"),
@@ -487,6 +505,38 @@ const mediaItemSchema = z.object({
   url: z.string(),
   thumbnail: z.string().optional(),
 });
+
+// Host application schema
+export const insertHostApplicationSchema = z.object({
+  hostName: z.string().min(2, "Host name must be at least 2 characters"),
+  hostBio: z.string().min(20, "Host bio must be at least 20 characters"),
+  hostCategories: z.array(z.enum(hostCategories)).min(1, "Select at least one category"),
+  membershipTier: z.enum(hostMembershipTiers),
+  proofOfPayment: z.string().optional(),
+  paymentReference: z.string().optional(),
+});
+
+// Host membership plan details
+export const hostMembershipPlans = {
+  starter: {
+    name: "Starter Host",
+    price: 49.99,
+    maxEvents: 15,
+    description: "Up to 15 events per month"
+  },
+  active: {
+    name: "Active Host",
+    price: 79.99,
+    maxEvents: 30,
+    description: "Up to 30 events per month"
+  },
+  pro: {
+    name: "Pro Host",
+    price: 99.99,
+    maxEvents: Infinity,
+    description: "Unlimited events"
+  }
+} as const;
 
 export const insertUserSchema = createInsertSchema(users, {
   interests: z.array(z.string()),

@@ -122,7 +122,7 @@ export default function Rewards() {
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 grayscale opacity-50">
                 <Filter className="w-8 h-8 text-muted-foreground" />
               </div>
-              <p className="font-bold text-muted-foreground">No rewards in this category yet</p>
+              <p className="font-bold text-muted-foreground">Rewards near you are starting to appear. Stay tuned!</p>
             </div>
           )}
         </div>

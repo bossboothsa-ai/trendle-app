@@ -7,7 +7,7 @@ import { Link, useLocation } from "wouter";
 import { useState, Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useDemo } from "@/context/DemoContext";
+import { useLaunch } from "@/context/LaunchContext";
 
 export default function Home() {
   const { toast } = useToast();
@@ -15,10 +15,10 @@ export default function Home() {
   const { data: posts, isLoading } = usePosts(feedType);
   const { data: user } = useUser();
   const { data: currentUser } = useCurrentUser();
-  const { isDemoMode } = useDemo();
+  const { isSoftLaunch } = useLaunch();
   const [location] = useLocation();
 
-  const showHost = isDemoMode || currentUser?.isHost;
+  const showHost = isSoftLaunch || currentUser?.isHost;
 
   const navItems = [
     { icon: HomeIcon, label: "Home", path: "/home" },
@@ -97,7 +97,7 @@ export default function Home() {
             </div>
           ) : posts?.length === 0 ? (
             <div className="text-center py-20 px-6">
-              <p className="text-muted-foreground">No posts yet. Be the first to share a moment!</p>
+              <p className="text-muted-foreground">Discovery is just beginning! Be the first to capture a vibe in your area.</p>
             </div>
           ) : (
             posts?.map((post, index) => (

@@ -993,46 +993,6 @@ export function useDeleteHostEvent() {
     }
   });
 }
-
-// Promote host event (pay-per-push)
-export function usePromoteHostEvent() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ eventId, tier, paymentMethod }: { eventId: number; tier: 'basic' | 'push' | 'featured'; paymentMethod: 'in_app' | 'invoice' }) => {
-      const url = buildUrl(api.hosts.promoteEvent.path, { id: eventId });
-      const res = await apiRequest(api.hosts.promoteEvent.method, url, {
-        body: JSON.stringify({ tier, paymentMethod }),
-      });
-      return api.hosts.promoteEvent.responses[201].parse(await res.json());
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [api.hosts.events.path] });
-      if (data.promotion.invoiceNumber) {
-        toast({
-          title: "Invoice Generated",
-          description: data.message,
-          className: "bg-primary text-white border-none",
-        });
-      } else {
-        toast({
-          title: "Event Promoted! 🚀",
-          description: data.message,
-          className: "bg-accent text-white border-none",
-        });
-      }
-    },
-    onError: (err: any) => {
-      toast({
-        title: "Promotion Failed",
-        description: err.message,
-        variant: "destructive",
-      });
-    }
-  });
-}
-
 // Get promotion status
 export function usePromotionStatus(eventId: number) {
   return useQuery({

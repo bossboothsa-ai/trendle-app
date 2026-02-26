@@ -4,15 +4,15 @@ import { CreatePostModal } from "./CreatePostModal";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useCurrentUser } from "@/hooks/use-trendle";
-import { useDemo } from "@/context/DemoContext";
+import { useLaunch } from "@/context/LaunchContext";
 
 export function BottomNav() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [location] = useLocation();
   const { data: currentUser } = useCurrentUser();
-  const { isDemoMode } = useDemo();
+  const { isSoftLaunch } = useLaunch();
 
-  const showHost = isDemoMode || currentUser?.isHost;
+  const showHost = isSoftLaunch || currentUser?.isHost;
 
   const navItems = [
     { icon: Home, label: "Feed", path: "/home" },

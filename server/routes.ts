@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage"; // Using persistent storage
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertCheckinSchema } from "@shared/schema";
+import { insertCheckinSchema, hostMembershipPlans } from "@shared/schema";
 import { registerBusinessRoutes } from "./businessRoutes";
 import { registerAdminRoutes } from "./adminRoutes";
 import { setupAuth } from "./auth";
@@ -21,8 +21,49 @@ export async function registerRoutes(
 
   // === USERS ===
   app.get(api.users.me.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    // If authenticated, return the real user
+    if (req.isAuthenticated()) {
+      return res.json(req.user);
+    }
+
+    // Otherwise, if in soft launch mode, return a realistic mock user
+    if (process.env.APP_MODE === 'soft_launch') {
+      return res.json({
+        id: 101,
+        username: "alex_travels",
+        displayName: "Alexander Thorne",
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
+        cover: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&q=80",
+        bio: "Explorer of urban vibes and hidden gems in Cape Town. Marketing lead by day, foodie by night. ☕🍕🍸",
+        location: "Gardens, Cape Town",
+        level: "Gold",
+        points: 850,
+        followersCount: 842,
+        followingCount: 315,
+        joinedDate: "Feb 2024",
+        socialLinks: { instagram: "alex_explorer", twitter: "a_thorne" },
+        interests: ["coffee", "cocktails", "photography", "hiking"],
+        isHost: false,
+        hostName: null,
+        hostBio: null,
+        hostVerified: false,
+        hostCreatedAt: null,
+        hostMembershipTier: null,
+        hostMembershipStatus: null,
+        hostMembershipStartDate: null,
+        hostMembershipEndDate: null,
+        hostCategories: [],
+        hostApplicationStatus: null,
+        hostApplicationDate: null,
+        paymentReference: null,
+        proofOfPayment: null,
+        paymentVerified: false,
+        paymentDate: null
+      });
+    }
+
+    // Default to unauthenticated
+    res.sendStatus(401);
   });
 
   app.get(api.users.suggested.path, async (req, res) => {
@@ -127,6 +168,7 @@ export async function registerRoutes(
       res.status(500).json({ message: err.message });
     }
   });
+
 
   app.get("/api/places/:id/stats", async (req, res) => {
     const placeId = Number(req.params.id);
@@ -419,76 +461,203 @@ export async function registerRoutes(
     }
   });
 
-  // === SIMULATION (DISABLED FOR REAL WORLD TESTING) ===
+  // === SIMULATION (ENABLED FOR SOFT LAUNCH) ===
   // Every 15 seconds, inject a random like or comment on a random post
-  /*
-  setInterval(async () => {
-    try {
-      const allPosts = await storage.getPosts();
-      if (allPosts.length === 0) return;
-  
-      const randomPost = allPosts[Math.floor(Math.random() * allPosts.length)];
-      const randomActorId = Math.floor(Math.random() * 4) + 2; // Users 2-5
-  
-      if (Math.random() > 0.5) {
-        // Mock Like
-        const existing = await storage.getLike(randomActorId, randomPost.id);
-        if (!existing) {
-          await storage.createLike({ userId: randomActorId, postId: randomPost.id });
+  if (process.env.APP_MODE === 'soft_launch') {
+    setInterval(async () => {
+      try {
+        const allPosts = await storage.getPosts();
+        if (allPosts.length === 0) return;
+
+        const randomPost = allPosts[Math.floor(Math.random() * allPosts.length)];
+        const randomActorId = Math.floor(Math.random() * 4) + 2; // Users 2-5
+
+        if (Math.random() > 0.5) {
+          // Mock Like
+          const existing = await storage.getLike(randomActorId, randomPost.id);
+          if (!existing) {
+            await storage.createLike({ userId: randomActorId, postId: randomPost.id });
+            if (randomPost.userId === 1) {
+              await storage.createNotification({
+                userId: 1, type: "like", actorId: randomActorId,
+                message: "Someone liked your moment!"
+              });
+            }
+          }
+        } else {
+          // Mock Comment
+          const texts = ["Love this!", "Where is this?", "So cool!", "Vibes ✨", "Need to go here."];
+          const text = texts[Math.floor(Math.random() * texts.length)];
+          await storage.createComment({ userId: randomActorId, postId: randomPost.id, text });
           if (randomPost.userId === 1) {
             await storage.createNotification({
-              userId: 1, type: "like", actorId: randomActorId,
-              message: "Someone liked your moment!"
+              userId: 1, type: "comment", actorId: randomActorId,
+              message: "Someone commented on your moment"
             });
           }
         }
-      } else {
-        // Mock Comment
-        const texts = ["Love this!", "Where is this?", "So cool!", "Vibes ✨", "Need to go here."];
-        const text = texts[Math.floor(Math.random() * texts.length)];
-        await storage.createComment({ userId: randomActorId, postId: randomPost.id, text });
-        if (randomPost.userId === 1) {
+      } catch (e) {
+        console.error("Simulation error", e);
+      }
+    }, 15000);
+
+    // Cashout Status Simulation
+    setInterval(async () => {
+      try {
+        const cashouts = await storage.getCashouts(1);
+        const pending = cashouts.filter(c => c.status === "pending");
+        if (pending.length > 0) {
+          const target = pending[0];
+          const nextStatus = Math.random() > 0.5 ? "approved" : "paid";
+          await storage.updateCashoutStatus(target.id, nextStatus);
+
           await storage.createNotification({
-            userId: 1, type: "comment", actorId: randomActorId,
-            message: "Someone commented on your moment"
+            userId: 1,
+            type: "reward",
+            actorId: 1,
+            message: `Your cashout request for ${target.amount} pts has been ${nextStatus}!`
           });
         }
+      } catch (e) {
+        console.error("Cashout simulation error", e);
       }
-    } catch (e) {
-      console.error("Simulation error", e);
-    }
-  }, 15000);
-  */
-
-  // Cashout Status Simulation
-  /*
-  setInterval(async () => {
-    try {
-      const cashouts = await storage.getCashouts(1);
-      const pending = cashouts.filter(c => c.status === "pending");
-      if (pending.length > 0) {
-        const target = pending[0];
-        const nextStatus = Math.random() > 0.5 ? "approved" : "paid";
-        await storage.updateCashoutStatus(target.id, nextStatus);
-  
-        await storage.createNotification({
-          userId: 1,
-          type: "reward",
-          actorId: 1,
-          message: `Your cashout request for ${target.amount} pts has been ${nextStatus}!`
-        });
-      }
-    } catch (e) {
-      console.error("Cashout simulation error", e);
-    }
-  }, 30000); // Check every 30 seconds
-  */
+    }, 30000); // Check every 30 seconds
+  }
 
   // Register business routes
   registerBusinessRoutes(app, storage);
 
   // Register admin routes
   registerAdminRoutes(app, storage);
+
+  // === HOST APPLICATIONS ===
+
+  // Create host application
+  app.post(api.hostApplications.create.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const input = api.hostApplications.create.input.parse(req.body);
+      await storage.createHostApplication((req.user as any).id, input);
+      res.status(201).json({
+        success: true,
+        message: "Application submitted successfully. Please upload proof of payment."
+      });
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Get host applications (admin)
+  app.get(api.hostApplications.list.path, async (req, res) => {
+    try {
+      const applications = await storage.getHostApplications();
+      res.json(applications);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Get single host application (admin)
+  app.get(api.hostApplications.get.path, async (req, res) => {
+    try {
+      const application = await storage.getHostApplication(Number(req.params.id));
+      if (!application) return res.status(404).json({ message: "Application not found" });
+      res.json(application);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Approve host application (admin)
+  app.post(api.hostApplications.approve.path, async (req, res) => {
+    try {
+      await storage.approveHostApplication(Number(req.params.id));
+      res.json({
+        success: true,
+        message: "Host application approved. User will be notified."
+      });
+    } catch (err: any) {
+      if (err.message === "User not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Reject host application (admin)
+  app.post(api.hostApplications.reject.path, async (req, res) => {
+    try {
+      const { reason } = req.body;
+      await storage.rejectHostApplication(Number(req.params.id), reason);
+      res.json({
+        success: true,
+        message: "Host application rejected. User will be notified."
+      });
+    } catch (err: any) {
+      if (err.message === "User not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Request correction for host application (admin)
+  app.post(api.hostApplications.requestCorrection.path, async (req, res) => {
+    try {
+      const { message } = req.body;
+      await storage.requestCorrectionHostApplication(Number(req.params.id), message);
+      res.json({
+        success: true,
+        message: "Correction requested. User will be notified."
+      });
+    } catch (err: any) {
+      if (err.message === "User not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // === HOST MEMBERSHIP ===
+
+  // Get host plans
+  app.get(api.hostMembership.plans.path, async (req, res) => {
+    try {
+      const plans = await storage.getHostPlans();
+      res.json(plans);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Get current host membership
+  app.get(api.hostMembership.current.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const membership = await storage.getHostMembership((req.user as any).id);
+      res.json(membership);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // Upload proof of payment
+  app.post(api.hostMembership.uploadProof.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { paymentReference, proofOfPayment } = req.body;
+      await storage.uploadProofOfPayment((req.user as any).id, paymentReference, proofOfPayment);
+      res.json({
+        success: true,
+        message: "Proof of payment uploaded successfully. Your application is under review."
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
 
   // === EVENTS ===
 
@@ -523,6 +692,25 @@ export async function registerRoutes(
   // Create event
   app.post(api.events.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const userId = (req.user as any).id;
+    const user = await storage.getUser(userId);
+
+    // Check if user is an approved host
+    if (!user?.isHost || !user?.hostVerified || user.hostMembershipStatus !== "active") {
+      return res.status(403).json({
+        message: "Only approved Social Hosts can create events. Please apply to become a host first."
+      });
+    }
+
+    // Check event creation limit based on membership tier
+    const membership = await storage.getHostMembership(userId);
+    if (membership.usedEvents >= membership.maxEvents) {
+      return res.status(403).json({
+        message: `You have reached your event limit for this month (${membership.maxEvents} events). Please upgrade your membership.`
+      });
+    }
+
     try {
       const input = api.events.create.input.parse(req.body);
       const eventData: any = {
@@ -715,14 +903,14 @@ export async function registerRoutes(
     try {
       const input = api.hosts.upgrade.input.parse(req.body);
       const userId = (req.user as any).id;
-      
+
       const updatedUser = await storage.upgradeToHost(userId, {
         isHost: true,
         hostName: input.hostName,
         hostBio: input.hostBio,
         hostCreatedAt: new Date(),
       });
-      
+
       res.json(updatedUser);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -751,7 +939,7 @@ export async function registerRoutes(
     try {
       const input = api.hosts.updateProfile.input.parse(req.body);
       const userId = (req.user as any).id;
-      
+
       const updatedUser = await storage.updateHostProfile(userId, input);
       res.json(updatedUser);
     } catch (err) {
@@ -781,10 +969,17 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
-      
+
       // Check if user is a host
       if (!user?.isHost) {
         return res.status(403).json({ message: "You must be a host to create events" });
+      }
+
+      // Check if user has reached event limit for their membership tier
+      const currentEvents = await storage.getHostEvents(userId);
+      const plan = hostMembershipPlans[user.hostMembershipTier || "starter"];
+      if (currentEvents.length >= plan.maxEvents) {
+        return res.status(403).json({ message: `You have reached the maximum number of events (${plan.maxEvents}) for your ${plan.name} plan` });
       }
 
       const input = api.hosts.createEvent.input.parse(req.body);
@@ -796,7 +991,7 @@ export async function registerRoutes(
         startDateTime: new Date(input.startDateTime),
         endDateTime: new Date(input.endDateTime),
       };
-      
+
       const event = await storage.createEvent(eventData);
       res.status(201).json(event);
     } catch (err) {
@@ -843,32 +1038,6 @@ export async function registerRoutes(
     }
   });
 
-  // Promote host event (pay-per-push)
-  app.post(api.hosts.promoteEvent.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    try {
-      const eventId = Number(req.params.id);
-      const userId = (req.user as any).id;
-      const { tier, paymentMethod } = req.body;
-      
-      const result = await storage.promoteHostEvent(eventId, userId, tier, paymentMethod);
-      res.status(201).json(result);
-    } catch (err: any) {
-      res.status(400).json({ message: err.message });
-    }
-  });
-
-  // Get promotion status
-  app.get(api.hosts.promotionStatus.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    try {
-      const eventId = Number(req.params.id);
-      const result = await storage.getPromotionStatus(eventId);
-      res.json(result);
-    } catch (err: any) {
-      res.status(500).json({ message: err.message });
-    }
-  });
 
   // Get host analytics
   app.get(api.hosts.analytics.path, async (req, res) => {

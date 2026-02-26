@@ -1,6 +1,7 @@
 {
     "name": "Trendle",
     "short_name": "Trendle",
+    "description": "Discover, Experience, Earn. The ultimate lifestyle rewards platform.",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#FFFFFF",
@@ -10,12 +11,16 @@
         {
             "src": "/favicon.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "/favicon.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         }
-    ]
+    ],
+    "screenshots": [],
+    "categories": ["lifestyle", "social", "rewards"]
 }

@@ -63,6 +63,17 @@ const DEV_USER: User = {
     hostAvatar: null,
     hostVerified: false,
     hostCreatedAt: null,
+    hostMembershipTier: null,
+    hostMembershipStatus: "inactive",
+    hostApplicationStatus: null,
+    hostApplicationDate: null,
+    hostMembershipStartDate: null,
+    hostMembershipEndDate: null,
+    hostCategories: null,
+    paymentReference: null,
+    proofOfPayment: null,
+    paymentVerified: false,
+    paymentDate: null,
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {

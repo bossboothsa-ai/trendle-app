@@ -221,9 +221,159 @@ export interface IStorage {
 
   // Admin Event Management
   approveEvent(eventId: number, adminId: number, approved: boolean, reason?: string): Promise<void>;
+
+  // Host Applications
+  createHostApplication(userId: number, data: any): Promise<void>;
+  getHostApplications(): Promise<(User & { hasFollowed: boolean })[]>;
+  getHostApplication(id: number): Promise<(User & { hasFollowed: boolean }) | undefined>;
+  approveHostApplication(id: number): Promise<void>;
+  rejectHostApplication(id: number, reason?: string): Promise<void>;
+  requestCorrectionHostApplication(id: number, message: string): Promise<void>;
+  uploadProofOfPayment(userId: number, paymentReference: string, proofOfPayment: string): Promise<void>;
+
+  // Host Membership
+  getHostMembership(userId: number): Promise<any>;
+  getHostPlans(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // Host Applications
+  async createHostApplication(userId: number, data: any): Promise<void> {
+    await this.updateUser(userId, {
+      hostName: data.hostName,
+      hostBio: data.hostBio,
+      hostCategories: data.hostCategories,
+      hostMembershipTier: data.membershipTier,
+      hostApplicationStatus: "pending",
+      hostApplicationDate: new Date(),
+      paymentReference: data.paymentReference,
+      proofOfPayment: data.proofOfPayment,
+      paymentVerified: false,
+    });
+  }
+
+  async getHostApplications(): Promise<(User & { hasFollowed: boolean })[]> {
+    const applications = await db.select()
+      .from(users)
+      .where(inArray(users.hostApplicationStatus, ["pending", "approved", "rejected"]))
+      .orderBy(desc(users.hostApplicationDate));
+
+    return applications.map(u => ({ ...u, hasFollowed: false }));
+  }
+
+  async getHostApplication(id: number): Promise<(User & { hasFollowed: boolean }) | undefined> {
+    const [user] = await db.select()
+      .from(users)
+      .where(and(eq(users.id, id), inArray(users.hostApplicationStatus, ["pending", "approved", "rejected"])));
+
+    if (!user) return undefined;
+    return { ...user, hasFollowed: false };
+  }
+
+  async approveHostApplication(id: number): Promise<void> {
+    const user = await this.getUser(id);
+    if (!user) throw new Error("User not found");
+
+    await this.updateUser(id, {
+      hostApplicationStatus: "approved",
+      hostMembershipStatus: "active",
+      isHost: true,
+      hostVerified: true,
+      hostCreatedAt: new Date(),
+      hostMembershipStartDate: new Date(),
+      paymentVerified: true,
+      paymentDate: new Date(),
+    });
+
+    // Create notification
+    await this.createNotification({
+      userId: id,
+      type: "host_approved",
+      actorId: 1, // Admin user
+      message: "Your Social Host application has been approved! You can now create events.",
+    });
+  }
+
+  async rejectHostApplication(id: number, reason?: string): Promise<void> {
+    await this.updateUser(id, {
+      hostApplicationStatus: "rejected",
+    });
+
+    // Create notification
+    await this.createNotification({
+      userId: id,
+      type: "host_rejected",
+      actorId: 1, // Admin user
+      message: reason || "Your Social Host application has been rejected.",
+    });
+  }
+
+  async requestCorrectionHostApplication(id: number, message: string): Promise<void> {
+    await this.updateUser(id, {
+      hostApplicationStatus: "pending",
+    });
+
+    // Create notification
+    await this.createNotification({
+      userId: id,
+      type: "host_correction",
+      actorId: 1, // Admin user
+      message: message,
+    });
+  }
+
+  async uploadProofOfPayment(userId: number, paymentReference: string, proofOfPayment: string): Promise<void> {
+    await this.updateUser(userId, {
+      paymentReference,
+      proofOfPayment,
+      hostApplicationStatus: "pending",
+    });
+  }
+
+  // Host Membership
+  async getHostMembership(userId: number): Promise<any> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const plans = {
+      starter: { name: "Starter Host", price: 49.99, maxEvents: 15, description: "Up to 15 events per month" },
+      active: { name: "Active Host", price: 79.99, maxEvents: 30, description: "Up to 30 events per month" },
+      pro: { name: "Pro Host", price: 99.99, maxEvents: Infinity, description: "Unlimited events" },
+    };
+
+    const tier = user.hostMembershipTier || "starter";
+    const plan = plans[tier as keyof typeof plans];
+
+    // Get event count for current month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const [eventsCount] = await db.select({ count: sql<number>`count(*)` })
+      .from(events)
+      .where(and(
+        eq(events.hostId, userId),
+        sql`${events.startDateTime} >= ${startOfMonth.toISOString()}`,
+        sql`${events.startDateTime} <= ${endOfMonth.toISOString()}`
+      ));
+
+    return {
+      tier,
+      status: user.hostMembershipStatus || "inactive",
+      startDate: user.hostMembershipStartDate?.toISOString(),
+      endDate: user.hostMembershipEndDate?.toISOString(),
+      maxEvents: plan.maxEvents,
+      usedEvents: Number(eventsCount.count),
+    };
+  }
+
+  async getHostPlans(): Promise<any> {
+    return {
+      starter: { name: "Starter Host", price: 49.99, maxEvents: 15, description: "Up to 15 events per month" },
+      active: { name: "Active Host", price: 79.99, maxEvents: 30, description: "Up to 30 events per month" },
+      pro: { name: "Pro Host", price: 99.99, maxEvents: Infinity, description: "Unlimited events" },
+    };
+  }
   async getUser(id: number): Promise<(User & { hasFollowed: boolean }) | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     if (!user) return undefined;
@@ -1288,9 +1438,9 @@ export class DatabaseStorage implements IStorage {
 
   async getHostEvents(userId: number, status?: string): Promise<any[]> {
     let query = db.select().from(events).where(eq(events.hostId, userId));
-    
+
     let eventList = await query;
-    
+
     if (status) {
       eventList = eventList.filter(e => e.status === status);
     }
@@ -1381,7 +1531,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       promotion,
-      message: paymentMethod === 'invoice' 
+      message: paymentMethod === 'invoice'
         ? `Invoice ${invoiceNumber} generated. Payment required to activate promotion.`
         : `Event promoted successfully!`,
     };
@@ -1389,7 +1539,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPromotionStatus(eventId: number): Promise<any> {
     const [event] = await db.select().from(events).where(eq(events.id, eventId));
-    
+
     let currentPromotion = null;
     if (event?.isFeatured) {
       currentPromotion = {
@@ -1419,10 +1569,10 @@ export class DatabaseStorage implements IStorage {
 
   async getHostAnalytics(userId: number): Promise<any> {
     const hostEvents = await this.getHostEvents(userId);
-    
+
     const upcomingEvents = hostEvents.filter(e => e.status === 'upcoming').length;
     const completedEvents = hostEvents.filter(e => e.status === 'completed').length;
-    
+
     // Get all attendees for host's events
     let totalAttendees = 0;
     for (const event of hostEvents) {

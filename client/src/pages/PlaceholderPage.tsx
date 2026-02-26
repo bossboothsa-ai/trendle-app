@@ -11,10 +11,10 @@ interface PlaceholderPageProps {
 }
 
 export default function PlaceholderPage({
-    title = "Feature In Preparation",
-    description = "This feature is currently being built and will be available in the next update.",
+    title = "Coming Soon to Your Area",
+    description = "We're currently expanding! This experience will be available in your district very soon. Stay tuned!",
     backUrl = "/",
-    backLabel = "Go Back"
+    backLabel = "Explore Other Vibes"
 }: PlaceholderPageProps) {
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { DEMO_POSTS, DEMO_USERS, isInDemoMode } from "@/lib/demo-data";
 
-interface DemoContextType {
-    isDemoMode: boolean;
-    setIsDemoMode: (active: boolean) => void;
-    demoState: {
+interface LaunchContextType {
+    isSoftLaunch: boolean;
+    setIsSoftLaunch: (active: boolean) => void;
+    launchState: {
         posts: any[];
         likes: Record<number, number>;
         comments: Record<number, any[]>;
@@ -13,27 +13,21 @@ interface DemoContextType {
     simulateComment: (postId: number, author: any, text: string) => void;
 }
 
-const DemoContext = createContext<DemoContextType | undefined>(undefined);
+const LaunchContext = createContext<LaunchContextType | undefined>(undefined);
 
-export const DemoProvider = ({ children }: { children: ReactNode }) => {
-    const [isDemoMode, setIsDemoMode] = useState(() => {
-        // Priority: 1. Query Param, 2. isInDemoMode (Host/Storage)
-        const params = new URLSearchParams(window.location.search);
-        const demoParam = params.get("demo");
-
-        if (demoParam === "true") {
-            localStorage.setItem("TRENDLE_DEMO_MODE", "true");
-            return true;
-        }
-        if (demoParam === "false") {
-            localStorage.setItem("TRENDLE_DEMO_MODE", "false");
-            return false;
-        }
+export const LaunchProvider = ({ children }: { children: ReactNode }) => {
+    const [isSoftLaunch, setIsSoftLaunch] = useState(() => {
+        // Priority: 1. APP_MODE, 2. Storage
+        if (process.env.APP_MODE === 'soft_launch') return true;
+        
+        const stored = localStorage.getItem("TRENDLE_SOFT_LAUNCH");
+        if (stored === "true") return true;
+        if (stored === "false") return false;
 
         return isInDemoMode();
     });
 
-    const [demoState, setDemoState] = useState({
+    const [launchState, setLaunchState] = useState({
         posts: DEMO_POSTS,
         likes: DEMO_POSTS.reduce((acc, post) => {
             acc[post.id] = post.likesCount;
@@ -46,19 +40,19 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     });
 
     useEffect(() => {
-        localStorage.setItem("TRENDLE_DEMO_MODE", isDemoMode.toString());
-    }, [isDemoMode]);
+        localStorage.setItem("TRENDLE_SOFT_LAUNCH", isSoftLaunch.toString());
+    }, [isSoftLaunch]);
 
-    // LIVE ACTIVITY SIMULATION
+    // LIVE ACTIVITY SIMULATION (Subtle)
     useEffect(() => {
-        if (!isDemoMode) return;
+        if (!isSoftLaunch) return;
 
         const timer = setInterval(() => {
-            // 1. Randomly increment some likes
+            // 1. Randomly increment some likes (simulating real activity)
             const randomPostIndex = Math.floor(Math.random() * DEMO_POSTS.length);
             const postId = DEMO_POSTS[randomPostIndex].id;
 
-            setDemoState(prev => ({
+            setLaunchState(prev => ({
                 ...prev,
                 likes: {
                     ...prev.likes,
@@ -67,20 +61,20 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
             }));
 
             // 2. Occasionally add a simulated comment
-            if (Math.random() > 0.7) {
+            if (Math.random() > 0.8) {
                 const commenter = DEMO_USERS[Math.floor(Math.random() * DEMO_USERS.length)];
                 const comments = ["Love this!", "Amazing vibe!", "Need to visit soon.", "Cape Town magic! ✨", "Great shot!", "Wish I was there."];
                 const commentText = comments[Math.floor(Math.random() * comments.length)];
 
                 simulateComment(postId, commenter, commentText);
             }
-        }, 20000); // Every 20 seconds for demo liveliness
+        }, 30000); // Every 30 seconds for subtle liveliness
 
         return () => clearInterval(timer);
-    }, [isDemoMode]);
+    }, [isSoftLaunch]);
 
     const simulateLike = (postId: number) => {
-        setDemoState(prev => ({
+        setLaunchState(prev => ({
             ...prev,
             likes: {
                 ...prev.likes,
@@ -90,7 +84,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const simulateComment = (postId: number, author: any, text: string) => {
-        setDemoState(prev => ({
+        setLaunchState(prev => ({
             ...prev,
             comments: {
                 ...prev.comments,
@@ -108,16 +102,16 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <DemoContext.Provider value={{ isDemoMode, setIsDemoMode, demoState, simulateLike, simulateComment }}>
+        <LaunchContext.Provider value={{ isSoftLaunch, setIsSoftLaunch, launchState, simulateLike, simulateComment }}>
             {children}
-        </DemoContext.Provider>
+        </LaunchContext.Provider>
     );
 };
 
-export const useDemo = () => {
-    const context = useContext(DemoContext);
+export const useLaunch = () => {
+    const context = useContext(LaunchContext);
     if (context === undefined) {
-        throw new Error("useDemo must be used within a DemoProvider");
+        throw new Error("useLaunch must be used within a LaunchProvider");
     }
     return context;
 };

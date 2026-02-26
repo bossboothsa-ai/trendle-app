@@ -10,6 +10,9 @@ export default defineConfig({
     // runtimeErrorOverlay(), // Remove for local
     // Replit-only plugins removed for local development
   ],
+  define: {
+    'process.env.APP_MODE': JSON.stringify(process.env.APP_MODE || 'production'),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),

@@ -3,7 +3,7 @@ import { Settings, Edit3, Award, MapPin, Gift, UserPlus, UserMinus, ChevronLeft,
 import { PostCard } from "@/components/PostCard";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/EditProfileModal";
-import { HostUpgradeModal } from "@/components/HostUpgradeModal";
+import { HostApplicationFlow } from "@/components/HostApplicationFlow";
 import { CreateHostEventModal } from "@/components/CreateHostEventModal";
 import { Link, useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export default function Profile() {
   const unfollowUser = useUnfollowUser();
 
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showHostUpgrade, setShowHostUpgrade] = useState(false);
+  const [showHostApplication, setShowHostApplication] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const myPosts = posts || [];
@@ -174,10 +174,38 @@ export default function Profile() {
                   </div>
                 )}
 
-                {/* Host Upgrade Button - Show if not already a host */}
-                {!currentUser?.isHost && (
+                {/* Host Application Status - Show if application is pending */}
+                {!currentUser?.isHost && currentUser?.hostApplicationStatus === "pending" && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-800 text-center">
+                    <p className="font-medium">Application Pending Review</p>
+                    <p className="text-xs mt-1">Approval typically takes 24-48 hours</p>
+                  </div>
+                )}
+
+                {/* Host Rejected Status - Show if application was rejected */}
+                {!currentUser?.isHost && currentUser?.hostApplicationStatus === "rejected" && (
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-full text-sm text-red-800 text-center">
+                    <p className="font-medium">Application Rejected</p>
+                    <p className="text-xs mt-1">You can reapply after 7 days</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 text-xs"
+                      onClick={() => setShowHostApplication(true)}
+                    >
+                      Reapply
+                    </Button>
+                  </div>
+                )}
+
+                {/* Host Application Button - Show if not already a host and no pending application */}
+                {!currentUser?.isHost && !currentUser?.hostApplicationStatus && (
                   <button
-                    onClick={() => setShowHostUpgrade(true)}
+                    onClick={() => {
+                      console.log("Become a Host button clicked");
+                      setShowHostApplication(true);
+                      console.log("showHostApplication state:", showHostApplication);
+                    }}
                     className="mt-4 flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full text-sm font-medium hover:from-yellow-500/30 hover:to-orange-500/30 transition-colors w-full justify-center"
                   >
                     <Crown className="w-4 h-4 text-yellow-600" />
@@ -239,7 +267,7 @@ export default function Profile() {
       </main>
 
       <EditProfileModal open={showEditProfile} onOpenChange={setShowEditProfile} />
-      <HostUpgradeModal open={showHostUpgrade} onOpenChange={setShowHostUpgrade} />
+      <HostApplicationFlow open={showHostApplication} onOpenChange={setShowHostApplication} />
       <CreateHostEventModal open={showCreateEvent} onOpenChange={setShowCreateEvent} />
     </div>
   );

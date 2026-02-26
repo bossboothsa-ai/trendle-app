@@ -80,6 +80,141 @@ export async function apiRequest(
     else if (cleanUrl.includes("/api/users/me/points-history")) responseData = DEMO_TRANSACTIONS;
     else if (cleanUrl.includes("/api/users/me/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
     else if (cleanUrl.includes("/api/rewards/history")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
+    else if (cleanUrl.includes("/api/host/applications")) {
+      if (cleanUrl.endsWith("/api/host/applications")) {
+        // Return all host applications from demo users
+        responseData = [
+          {
+            id: 101,
+            username: "demo_user",
+            displayName: "Alexander Thorne",
+            email: "alex@example.com",
+            hostName: "Alex's Events",
+            hostBio: "Hosting unique experiences in Cape Town's most vibrant venues",
+            hostCategories: ["Social", "Networking", "Nightlife"],
+            hostApplicationStatus: "approved",
+            hostApplicationDate: new Date("2024-02-14"),
+            hostMembershipTier: "active",
+            paymentReference: "TRND-HOST-101",
+            proofOfPayment: "https://example.com/payment/101",
+            paymentVerified: true,
+            paymentDate: new Date("2024-02-14")
+          },
+          {
+            id: 102,
+            username: "Alex_Creative",
+            displayName: "Alex Creative",
+            email: "alex.creative@example.com",
+            hostName: "Creative Events",
+            hostBio: "Creative workshops and art events for everyone",
+            hostCategories: ["Art", "Workshops"],
+            hostApplicationStatus: "pending",
+            hostApplicationDate: new Date("2024-02-20"),
+            hostMembershipTier: "starter",
+            paymentReference: "TRND-HOST-102",
+            proofOfPayment: "https://example.com/payment/102",
+            paymentVerified: true,
+            paymentDate: new Date("2024-02-20")
+          },
+          {
+            id: 103,
+            username: "Sarah_Wellness",
+            displayName: "Sarah Wellness",
+            email: "sarah.wellness@example.com",
+            hostName: "Wellness Events",
+            hostBio: "Yoga, meditation, and wellness workshops",
+            hostCategories: ["Wellness", "Health"],
+            hostApplicationStatus: "rejected",
+            hostApplicationDate: new Date("2024-02-18"),
+            hostMembershipTier: "active",
+            paymentReference: "TRND-HOST-103",
+            proofOfPayment: "https://example.com/payment/103",
+            paymentVerified: false,
+            paymentDate: new Date("2024-02-18")
+          }
+        ];
+      } else if (cleanUrl.includes("/approve")) {
+        const id = parseInt(cleanUrl.split("/").reverse()[1]);
+        responseData = { success: true, message: `Application ${id} approved` };
+      } else if (cleanUrl.includes("/reject")) {
+        const id = parseInt(cleanUrl.split("/").reverse()[1]);
+        responseData = { success: true, message: `Application ${id} rejected` };
+      } else if (cleanUrl.includes("/request-correction")) {
+        const id = parseInt(cleanUrl.split("/").reverse()[1]);
+        responseData = { success: true, message: `Correction requested for application ${id}` };
+      } else if (cleanUrl.includes("/api/host/applications/")) {
+        const id = parseInt(cleanUrl.split("/").pop() || "0");
+        responseData = [
+          {
+            id: 101,
+            username: "demo_user",
+            displayName: "Alexander Thorne",
+            email: "alex@example.com",
+            hostName: "Alex's Events",
+            hostBio: "Hosting unique experiences in Cape Town's most vibrant venues",
+            hostCategories: ["Social", "Networking", "Nightlife"],
+            hostApplicationStatus: "approved",
+            hostApplicationDate: new Date("2024-02-14"),
+            hostMembershipTier: "active",
+            paymentReference: "TRND-HOST-101",
+            proofOfPayment: "https://example.com/payment/101",
+            paymentVerified: true,
+            paymentDate: new Date("2024-02-14")
+          },
+          {
+            id: 102,
+            username: "Alex_Creative",
+            displayName: "Alex Creative",
+            email: "alex.creative@example.com",
+            hostName: "Creative Events",
+            hostBio: "Creative workshops and art events for everyone",
+            hostCategories: ["Art", "Workshops"],
+            hostApplicationStatus: "pending",
+            hostApplicationDate: new Date("2024-02-20"),
+            hostMembershipTier: "starter",
+            paymentReference: "TRND-HOST-102",
+            proofOfPayment: "https://example.com/payment/102",
+            paymentVerified: true,
+            paymentDate: new Date("2024-02-20")
+          },
+          {
+            id: 103,
+            username: "Sarah_Wellness",
+            displayName: "Sarah Wellness",
+            email: "sarah.wellness@example.com",
+            hostName: "Wellness Events",
+            hostBio: "Yoga, meditation, and wellness workshops",
+            hostCategories: ["Wellness", "Health"],
+            hostApplicationStatus: "rejected",
+            hostApplicationDate: new Date("2024-02-18"),
+            hostMembershipTier: "active",
+            paymentReference: "TRND-HOST-103",
+            proofOfPayment: "https://example.com/payment/103",
+            paymentVerified: false,
+            paymentDate: new Date("2024-02-18")
+          }
+        ].find(app => app.id === id) || null;
+      } else {
+        responseData = { success: true, message: "Application submitted successfully" };
+      }
+    }
+    else if (cleanUrl.includes("/api/host/plans")) {
+      responseData = {
+        starter: { name: "Starter Host", price: 49.99, maxEvents: 15, description: "Up to 15 events per month" },
+        active: { name: "Active Host", price: 79.99, maxEvents: 30, description: "Up to 30 events per month" },
+        pro: { name: "Pro Host", price: 99.99, maxEvents: Infinity, description: "Unlimited events" }
+      };
+    }
+    else if (cleanUrl.includes("/api/host/membership")) {
+      responseData = {
+        tier: "active",
+        status: "active",
+        startDate: new Date("2024-02-15"),
+        endDate: new Date("2024-03-15"),
+        maxEvents: 30,
+        usedEvents: 5
+      };
+    }
 
     // Default success for mutations
     if (!responseData && method !== "GET") {
@@ -164,6 +299,141 @@ export const getQueryFn: <T>(options: {
         else if (cleanUrl.includes("/api/users/me/points-history")) responseData = DEMO_TRANSACTIONS;
         else if (cleanUrl.includes("/api/users/me/redemptions")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
         else if (cleanUrl.includes("/api/rewards/history")) responseData = DEMO_WALKTHROUGH.wallet.redemptions;
+        else if (cleanUrl.includes("/api/host/applications")) {
+          if (cleanUrl.endsWith("/api/host/applications")) {
+            // Return all host applications from demo users
+            responseData = [
+              {
+                id: 101,
+                username: "demo_user",
+                displayName: "Alexander Thorne",
+                email: "alex@example.com",
+                hostName: "Alex's Events",
+                hostBio: "Hosting unique experiences in Cape Town's most vibrant venues",
+                hostCategories: ["Social", "Networking", "Nightlife"],
+                hostApplicationStatus: "approved",
+                hostApplicationDate: new Date("2024-02-14"),
+                hostMembershipTier: "active",
+                paymentReference: "TRND-HOST-101",
+                proofOfPayment: "https://example.com/payment/101",
+                paymentVerified: true,
+                paymentDate: new Date("2024-02-14")
+              },
+              {
+                id: 102,
+                username: "Alex_Creative",
+                displayName: "Alex Creative",
+                email: "alex.creative@example.com",
+                hostName: "Creative Events",
+                hostBio: "Creative workshops and art events for everyone",
+                hostCategories: ["Art", "Workshops"],
+                hostApplicationStatus: "pending",
+                hostApplicationDate: new Date("2024-02-20"),
+                hostMembershipTier: "starter",
+                paymentReference: "TRND-HOST-102",
+                proofOfPayment: "https://example.com/payment/102",
+                paymentVerified: true,
+                paymentDate: new Date("2024-02-20")
+              },
+              {
+                id: 103,
+                username: "Sarah_Wellness",
+                displayName: "Sarah Wellness",
+                email: "sarah.wellness@example.com",
+                hostName: "Wellness Events",
+                hostBio: "Yoga, meditation, and wellness workshops",
+                hostCategories: ["Wellness", "Health"],
+                hostApplicationStatus: "rejected",
+                hostApplicationDate: new Date("2024-02-18"),
+                hostMembershipTier: "active",
+                paymentReference: "TRND-HOST-103",
+                proofOfPayment: "https://example.com/payment/103",
+                paymentVerified: false,
+                paymentDate: new Date("2024-02-18")
+              }
+            ];
+          } else if (cleanUrl.includes("/approve")) {
+            const id = parseInt(cleanUrl.split("/").reverse()[1]);
+            responseData = { success: true, message: `Application ${id} approved` };
+          } else if (cleanUrl.includes("/reject")) {
+            const id = parseInt(cleanUrl.split("/").reverse()[1]);
+            responseData = { success: true, message: `Application ${id} rejected` };
+          } else if (cleanUrl.includes("/request-correction")) {
+            const id = parseInt(cleanUrl.split("/").reverse()[1]);
+            responseData = { success: true, message: `Correction requested for application ${id}` };
+          } else if (cleanUrl.includes("/api/host/applications/")) {
+            const id = parseInt(cleanUrl.split("/").pop() || "0");
+            responseData = [
+              {
+                id: 101,
+                username: "demo_user",
+                displayName: "Alexander Thorne",
+                email: "alex@example.com",
+                hostName: "Alex's Events",
+                hostBio: "Hosting unique experiences in Cape Town's most vibrant venues",
+                hostCategories: ["Social", "Networking", "Nightlife"],
+                hostApplicationStatus: "approved",
+                hostApplicationDate: new Date("2024-02-14"),
+                hostMembershipTier: "active",
+                paymentReference: "TRND-HOST-101",
+                proofOfPayment: "https://example.com/payment/101",
+                paymentVerified: true,
+                paymentDate: new Date("2024-02-14")
+              },
+              {
+                id: 102,
+                username: "Alex_Creative",
+                displayName: "Alex Creative",
+                email: "alex.creative@example.com",
+                hostName: "Creative Events",
+                hostBio: "Creative workshops and art events for everyone",
+                hostCategories: ["Art", "Workshops"],
+                hostApplicationStatus: "pending",
+                hostApplicationDate: new Date("2024-02-20"),
+                hostMembershipTier: "starter",
+                paymentReference: "TRND-HOST-102",
+                proofOfPayment: "https://example.com/payment/102",
+                paymentVerified: true,
+                paymentDate: new Date("2024-02-20")
+              },
+              {
+                id: 103,
+                username: "Sarah_Wellness",
+                displayName: "Sarah Wellness",
+                email: "sarah.wellness@example.com",
+                hostName: "Wellness Events",
+                hostBio: "Yoga, meditation, and wellness workshops",
+                hostCategories: ["Wellness", "Health"],
+                hostApplicationStatus: "rejected",
+                hostApplicationDate: new Date("2024-02-18"),
+                hostMembershipTier: "active",
+                paymentReference: "TRND-HOST-103",
+                proofOfPayment: "https://example.com/payment/103",
+                paymentVerified: false,
+                paymentDate: new Date("2024-02-18")
+              }
+            ].find(app => app.id === id) || null;
+          } else {
+            responseData = { success: true, message: "Application submitted successfully" };
+          }
+        }
+        else if (cleanUrl.includes("/api/host/plans")) {
+          responseData = {
+            starter: { name: "Starter Host", price: 49.99, maxEvents: 15, description: "Up to 15 events per month" },
+            active: { name: "Active Host", price: 79.99, maxEvents: 30, description: "Up to 30 events per month" },
+            pro: { name: "Pro Host", price: 99.99, maxEvents: Infinity, description: "Unlimited events" }
+          };
+        }
+        else if (cleanUrl.includes("/api/host/membership")) {
+          responseData = {
+            tier: "active",
+            status: "active",
+            startDate: new Date("2024-02-15"),
+            endDate: new Date("2024-03-15"),
+            maxEvents: 30,
+            usedEvents: 5
+          };
+        }
 
         return responseData || {};
       }

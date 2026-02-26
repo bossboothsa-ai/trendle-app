@@ -3,6 +3,10 @@
 
 export const isInDemoMode = () => {
     if (typeof window === "undefined") return false;
+    
+    // Support soft launch mode as a "live" feeling demo
+    if (process.env.APP_MODE === 'soft_launch') return true;
+
     const isDemoHost =
         window.location.hostname.includes("github.io") ||
         window.location.hostname.includes("localhost") ||
@@ -25,7 +29,23 @@ export const DEMO_USERS = [
         followingCount: 315,
         joinedDate: "Feb 2024",
         socialLinks: { instagram: "alex_explorer", twitter: "a_thorne" },
-        interests: ["coffee", "cocktails", "photography", "hiking"]
+        interests: ["coffee", "cocktails", "photography", "hiking"],
+        isHost: false,
+        hostName: null,
+        hostBio: null,
+        hostVerified: false,
+        hostCreatedAt: null,
+        hostMembershipTier: null,
+        hostMembershipStatus: null,
+        hostMembershipStartDate: null,
+        hostMembershipEndDate: null,
+        hostCategories: [],
+        hostApplicationStatus: null,
+        hostApplicationDate: null,
+        paymentReference: null,
+        proofOfPayment: null,
+        paymentVerified: false,
+        paymentDate: null
     },
     {
         id: 102,
@@ -84,7 +104,19 @@ export const DEMO_USERS = [
         points: 2100,
         followersCount: 1200,
         followingCount: 600,
-        joinedDate: "Oct 2024"
+        joinedDate: "Oct 2024",
+        isHost: false,
+        hostName: "Zen Events",
+        hostBio: "Hosting mindful wellness events and yoga retreats",
+        hostVerified: false,
+        hostMembershipTier: "starter",
+        hostMembershipStatus: "inactive",
+        hostApplicationStatus: "pending",
+        hostApplicationDate: new Date("2024-03-01"),
+        paymentReference: "TRND-HOST-106",
+        proofOfPayment: "https://example.com/payment/106",
+        paymentVerified: false,
+        hostCategories: ["Wellness", "Community"]
     },
     {
         id: 107,
@@ -97,7 +129,19 @@ export const DEMO_USERS = [
         points: 7200,
         followersCount: 8900,
         followingCount: 450,
-        joinedDate: "Dec 2023"
+        joinedDate: "Dec 2023",
+        isHost: false,
+        hostName: "Tasha's Food Tours",
+        hostBio: "Exploring Cape Town's culinary scene through curated food tours",
+        hostVerified: false,
+        hostMembershipTier: "pro",
+        hostMembershipStatus: "inactive",
+        hostApplicationStatus: "rejected",
+        hostApplicationDate: new Date("2024-02-28"),
+        paymentReference: "TRND-HOST-107",
+        proofOfPayment: "https://example.com/payment/107",
+        paymentVerified: false,
+        hostCategories: ["Social", "Other"]
     },
     {
         id: 108,
