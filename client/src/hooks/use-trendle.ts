@@ -318,7 +318,7 @@ export function useNotifications() {
     queryFn: async () => {
       const res = await apiRequest("GET", api.notifications.list.path);
       const data = await res.json();
-      if (isInDemoMode()) return Array.isArray(data) ? data : [];
+      if (isInDemoMode()) return DEMO_NOTIFICATIONS;
       return api.notifications.list.responses[200].parse(data);
     },
     refetchInterval: 10000,
