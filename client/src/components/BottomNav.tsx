@@ -29,10 +29,10 @@ export function BottomNav() {
           {navItems.slice(0, 2).map((item) => (
             <Link key={item.path} href={item.path} className={cn(
               "flex-1 flex flex-col items-center justify-center gap-1 p-2 cursor-pointer transition-colors duration-200",
-              location === item.path ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              location === item.path ? "nav-item-active font-bold" : "text-muted-foreground hover:text-foreground"
             )}>
               <item.icon className="w-6 h-6" strokeWidth={location === item.path ? 2.5 : 2} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px]">{item.label}</span>
             </Link>
           ))}
 
@@ -48,10 +48,10 @@ export function BottomNav() {
           {navItems.slice(2).map((item) => (
             <Link key={item.path} href={item.path} className={cn(
               "flex-1 flex flex-col items-center justify-center gap-1 p-2 cursor-pointer transition-colors duration-200",
-              location === item.path ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              location === item.path ? "nav-item-active font-bold" : "text-muted-foreground hover:text-foreground"
             )}>
               <item.icon className="w-6 h-6" strokeWidth={location === item.path ? 2.5 : 2} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px]">{item.label}</span>
             </Link>
           ))}
 
@@ -59,7 +59,7 @@ export function BottomNav() {
           {showHost ? (
             <Link href="/host" className={cn(
               "flex-1 flex flex-col items-center justify-center gap-1 p-2 cursor-pointer transition-colors duration-200",
-              location === "/host" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              location === "/host" ? "nav-item-active" : "text-muted-foreground hover:text-foreground"
             )}>
               <Crown className="w-6 h-6" strokeWidth={location === "/host" ? 2.5 : 2} />
               <span className="text-[10px] font-medium">Host</span>
@@ -67,7 +67,7 @@ export function BottomNav() {
           ) : (
             <Link href="/profile" className={cn(
               "flex-1 flex flex-col items-center justify-center gap-1 p-2 cursor-pointer transition-colors duration-200",
-              location === "/profile" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              location === "/profile" || location.startsWith("/profile/") ? "nav-item-active" : "text-muted-foreground hover:text-foreground"
             )}>
               <User className="w-6 h-6" strokeWidth={location === "/profile" ? 2.5 : 2} />
               <span className="text-[10px] font-medium">Profile</span>

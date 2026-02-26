@@ -219,12 +219,51 @@ function TransactionItem({ tx }: { tx: any }) {
 
 function EmptyHistory() {
     return (
-        <div className="text-center py-12 px-8">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 grayscale opacity-50">
-                <History className="w-8 h-8 text-muted-foreground" />
+        <div className="text-center py-6 px-4">
+            <p className="font-bold text-muted-foreground mb-6 text-sm">
+                Earn points by visiting places and completing moments.
+            </p>
+            
+            <div className="grid gap-3 text-left">
+                {/* Airtime Placeholder */}
+                <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <PhoneCall className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm text-foreground">Airtime & Data</p>
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold">Unlocks at 500 pts</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Cash Rewards Placeholder */}
+                <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <Banknote className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm text-foreground">Cash Rewards</p>
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold">Unlocks at 1000 pts</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Venue Discounts Placeholder */}
+                <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex items-center justify-between opacity-80 backdrop-blur-sm grayscale-[30%] pointer-events-none">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                            <Gift className="w-5 h-5 text-accent" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-sm text-foreground">Venue Discounts</p>
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold">Unlocks at 250 pts</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p className="font-bold text-muted-foreground">No transactions yet</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Start engaging to earn points!</p>
         </div>
     );
 }

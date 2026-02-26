@@ -327,17 +327,72 @@ export const DEMO_BUSINESSES = [
     }
 ];
 
-// Generate 50 posts with varied timestamps and content
-export const DEMO_POSTS = Array.from({ length: 50 }).map((_, i) => {
-    const user = DEMO_USERS[i % 10] || DEMO_USERS[0];
-    const biz = DEMO_BUSINESSES[i % DEMO_BUSINESSES.length] || DEMO_BUSINESSES[0];
-    const category = biz.category;
+// Mock Content Engine for Realism (Phase 2 constraint: no repeats)
+const REALISTIC_CAPTIONS = [
+    "Just found my new favorite spot in the city. The energy here is absolutely unmatched tonight! 🌃✨ #CityVibes",
+    "Nothing beats a slow morning with a perfect flat white. Definitely coming back. ☕🥐 #SlowLiving",
+    "Sunset views and great company. What more do you need? 🌇🥂 #GoldenHour",
+    "Hidden gem alert! 🚨 The aesthetic here is crazy. #LocalHunters",
+    "Honestly the best matcha I've had all year. Don't sleep on this place! 🍵🌿",
+    "Weekend mode activated. The playlist here is exactly what I needed. 🎧💃",
+    "A little slice of paradise right in the neighborhood. Highly recommend the signature special! 🍕💯",
+    "Mid-week escape. Loving the minimalist design and calm vibes. 🌿✨ #Aesthetics",
+    "Can we talk about this lighting?! The perfect date night spot. 🍷🕯️",
+    "Finally made it here! The hype is 100% real. Such a cool crowd tonight. 🔥",
+    "Sunday kind of love. Great food, better people. 🥞🥑 #BrunchLife",
+    "Ending the day on a high note. This rooftop is everything. 🏙️🍹",
+    "Such a creative pop-up event! Loving the community energy here today. 🎨🤝",
+    "Working from 'home' today. The Wi-Fi is fast and the coffee is strong. 💻☕ #RemoteWork",
+    "First time here and I'm blown away by the hospitality. 10/10 experience! ⭐⭐⭐⭐⭐",
+    "Just the right amount of chaos and charm. This city never sleeps. 🚦🚕 #UrbanExploration",
+    "Stumbled upon this place by accident and it just made my day. 🍀✨",
+    "Post-workout refuel! The smoothies here are literal magic. 🍓🍌 #Wellness",
+    "Vintage shopping and cafe hopping. A perfect Saturday. 👗🛍️ #Thrifty",
+    "Taking a moment to just breathe and enjoy the view. Quality time. 🌊🌅",
+    "The details in this interior design are stunning. Very inspiring space. 🛋️🖼️",
+    "Catching up with old friends over some amazing tapas. 🫒🍷",
+    "Live music, cold drinks, summer breeze. Perfection. 🎸🍺 #LiveMusic",
+    "They really know how to throw an event! Such an immersive experience. 🎭✨",
+    "Starting the week with good intentions and a great breakfast. 🍳🥑",
+    "If you haven't been here yet, what are you doing? Absolute must-visit. 🏆",
+    "Late night cravings sorted. The street food scene here is elite. 🌮🌶️",
+    "Finding peace in the middle of the city hustle. A true urban oasis. 🌴🏙️",
+    "The barista remembered my order! Little things like this make me loyal. ❤️☕",
+    "Supporting local businesses always! Every detail feels made with love. 🛍️🤝",
+    "Escaping the rain in the coziest corner I could find. 🌧️📚",
+    "Celebrating a small win today! Treat yourself, you deserve it. 🍾🎉",
+    "The textures and colors here are giving me so much life. 🎨🌺",
+    "A spontaneous night out that turned into one of the best memories. 🌌💫",
+    "Morning run led me to this cute little spot. Perfect detour! 🏃‍♀️☕",
+    "The flavor profiles in this dish are insane. Chef understood the assignment. 👨‍🍳🔥",
+    "Just sitting here people-watching. The best free entertainment. 👀🚶‍♂️",
+    "Good vibes only. The energy in this room is contagious! ⚡💃",
+    "My safe space for when I need to focus and get things done. 🎧📝",
+    "Closing out the weekend the right way. Until next time! ✌️🌇"
+];
 
-    let caption = `Loved my visit to ${biz.name}! The vibes are perfect. #Trendle #CapeTown`;
-    if (category === "Coffee") caption = `Best caffeine fix at ${biz.name}. The latte art is incredible! ☕✨ #CoffeeLovers`;
-    if (category === "Drink") caption = `Sipping on perfection at ${biz.name}. The sunset views are unbeatable. 🍸🌆 #Nightlife`;
-    if (category === "Eat") caption = `Best meal I've had in a while at ${biz.name}. Highly recommend! 🍕🍴 #CTFoodie`;
-    if (category === "Play") caption = `Having the time of my life at ${biz.name}! 🌟✨ #PlayTime #CapeTown`;
+const TIME_SPREAD = [
+    "2m ago", "5m ago", "12m ago", "24m ago", "45m ago", "1h ago", "2h ago", "3h ago", "5h ago", "8h ago", 
+    "12h ago", "Yesterday", "Yesterday", "2 days ago", "2 days ago", "3 days ago"
+];
+
+export const DEMO_POSTS = Array.from({ length: 40 }).map((_, i) => {
+    const user = DEMO_USERS[i % DEMO_USERS.length];
+    const biz = DEMO_BUSINESSES[i % DEMO_BUSINESSES.length];
+    
+    // Ensure unique captions by using index directly (up to 40)
+    const caption = REALISTIC_CAPTIONS[i % REALISTIC_CAPTIONS.length];
+    
+    // Varied engagement
+    const likesCount = Math.floor(Math.random() * 830) + 12; // 12-842 rule
+    const commentsCount = Math.floor(Math.random() * 43); // 0-43 rule
+    
+    // Realistic timestamps
+    const timeSpreadIndex = Math.min(Math.floor(i / 2), TIME_SPREAD.length - 1);
+    
+    // Calculate an actual date based on the index to keep ordering logical
+    const minutesToSubtract = i === 0 ? 2 : (i < 5 ? i * 10 : (i < 15 ? i * 45 : i * 120));
+    const postDate = new Date(Date.now() - minutesToSubtract * 60000);
 
     return {
         id: 601 + i,
@@ -347,10 +402,12 @@ export const DEMO_POSTS = Array.from({ length: 50 }).map((_, i) => {
         caption,
         placeId: biz.id,
         place: biz,
-        likesCount: Math.floor(Math.random() * 500) + 50,
-        commentsCount: Math.floor(Math.random() * 50) + 5,
-        createdAt: new Date(Date.now() - i * 3600000 * 2).toISOString(),
-        hasLiked: i % 3 === 0
+        likesCount,
+        commentsCount,
+        createdAt: postDate.toISOString(),
+        timeDisplay: TIME_SPREAD[timeSpreadIndex], // Optional helper format
+        hasLiked: i % 4 === 0,
+        hasFollowed: i % 5 === 0
     };
 });
 

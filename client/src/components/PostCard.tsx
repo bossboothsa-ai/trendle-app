@@ -131,9 +131,9 @@ export function PostCard({ post }: PostCardProps) {
             <AvatarImage src={post.author.avatar} />
             <AvatarFallback>{post.author.username[0]}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="font-bold text-sm leading-none group-hover/author:text-primary transition-colors truncate-name">{post.author.username}</span>
-            <span className="text-[10px] text-weight-regular text-muted-foreground mt-1">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[16px] font-semibold leading-[1.3] group-hover/author:text-primary transition-colors truncate-name">{post.author.username}</span>
+            <span className="text-[12px] text-muted-foreground">
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </span>
           </div>
@@ -257,22 +257,22 @@ export function PostCard({ post }: PostCardProps) {
 
       {/* Content */}
       <div className="p-6 space-y-4">
-        {/* Caption - Using Medium weight for body text per audit */}
+        {/* Caption - Strict Body Tier */}
         <div>
-          <h3 className="text-base text-weight-medium font-body mb-2 leading-snug line-clamp-2">
+          <h3 className="text-[15px] font-normal leading-[1.5] text-foreground mb-2 line-clamp-2">
             {post.caption}
           </h3>
         </div>
 
-        {/* Place Name */}
+        {/* Place Name - Meta Tier */}
         {post.place && (
-          <div className="flex items-center gap-2 text-muted-foreground group/place cursor-pointer">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="font-medium text-xs group-hover/place:text-primary transition-colors">{post.place?.name}</span>
+          <div className="flex items-center gap-1.5 text-muted-foreground group/place cursor-pointer">
+            <MapPin className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[13px] group-hover/place:text-primary transition-colors">{post.place?.name}</span>
           </div>
         )}
 
-        {/* Actions */}
+        {/* Actions - Meta Tier mapping */}
         <div className="flex items-center justify-between pt-4 border-t border-border/50">
           <div className="flex items-center gap-6">
             <button
@@ -281,24 +281,24 @@ export function PostCard({ post }: PostCardProps) {
             >
               <Heart
                 className={cn(
-                  "w-7 h-7 transition-colors duration-200",
+                  "w-6 h-6 transition-colors duration-200",
                   post.hasLiked ? "fill-accent text-accent" : "text-foreground group-hover:text-accent"
                 )}
               />
-              <span className="font-semibold text-sm">{post.likesCount}</span>
+              <span className="text-[13px] font-medium text-foreground">{post.likesCount}</span>
             </button>
             <button
               onClick={() => setShowComments(!showComments)}
               className="group flex items-center gap-2"
             >
-              <MessageCircle className="w-7 h-7 text-foreground group-hover:text-primary transition-colors" />
-              <span className="font-semibold text-sm">{post.commentsCount}</span>
+              <MessageCircle className="w-6 h-6 text-foreground group-hover:text-primary transition-colors" />
+              <span className="text-[13px] font-medium text-foreground">{post.commentsCount}</span>
             </button>
             <button
               onClick={handleShare}
               className="group flex items-center gap-2"
             >
-              <Share2 className="w-6 h-6 text-foreground group-hover:text-primary transition-colors" />
+              <Share2 className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
             </button>
           </div>
           <DropdownMenu>

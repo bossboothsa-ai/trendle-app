@@ -13,6 +13,7 @@ import SurveysTasks from "@/pages/SurveysTasks";
 import SettingsPage from "@/pages/Settings";
 import Wallet from "@/pages/Wallet";
 import Events from "@/pages/Events";
+import Messages from "@/pages/Messages";
 import BusinessOnboarding from "@/pages/business/BusinessOnboarding";
 import PendingApproval from "@/pages/business/PendingApproval";
 import BusinessDashboard from "@/pages/business/BusinessDashboard";
@@ -156,6 +157,9 @@ function Router() {
         </Route>
         <Route path="/notifications">
           <UserLayout><Notifications /></UserLayout>
+        </Route>
+        <Route path="/messages">
+          <UserLayout><Messages /></UserLayout>
         </Route>
         <Route path="/surveys-tasks">
           <UserLayout><SurveysTasks /></UserLayout>

@@ -8,6 +8,7 @@ import { useState, Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useLaunch } from "@/context/LaunchContext";
+import { Header } from "@/components/Header";
 
 export default function Home() {
   const { toast } = useToast();
@@ -35,57 +36,35 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 py-3">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Trendle
-          </h1>
-          <div className="flex items-center gap-4">
-            <Link href="/business/login" className="p-2 hover:bg-muted rounded-full transition-colors" title="Business Portal">
-              <Briefcase className="w-6 h-6 text-foreground" />
-            </Link>
-            <button
-              onClick={() => toast({ title: "Coming Soon", description: "Search feature is under development." })}
-              className="p-2 hover:bg-muted rounded-full transition-colors"
-            >
-              <Search className="w-6 h-6 text-foreground" />
-            </button>
-            <Link href="/notifications" className="relative p-2 hover:bg-muted rounded-full transition-colors">
-              <Bell className="w-6 h-6 text-foreground" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-background"></span>
-            </Link>
-          </div>
-        </div>
+      <Header title="Trendle" />
 
-        {/* Feed Toggle */}
-        <div className="flex items-center justify-center gap-8 border-t border-border/20 pt-2 pb-1">
-          <button
-            onClick={() => setFeedType('foryou')}
-            className={cn(
-              "text-base font-bold transition-all relative py-1",
-              feedType === 'foryou' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            For You
-            {feedType === 'foryou' && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
-            )}
-          </button>
-          <button
-            onClick={() => setFeedType('following')}
-            className={cn(
-              "text-base font-bold transition-all relative py-1",
-              feedType === 'following' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Following
-            {feedType === 'following' && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
-            )}
-          </button>
-        </div>
-      </header>
+      {/* Feed Toggle */}
+      <div className="sticky top-[60px] z-30 bg-background/95 backdrop-blur-md flex items-center justify-center gap-8 border-b border-border/20 pt-2 pb-2">
+        <button
+          onClick={() => setFeedType('foryou')}
+          className={cn(
+            "text-base font-bold transition-all relative py-1",
+            feedType === 'foryou' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          For You
+          {feedType === 'foryou' && (
+            <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setFeedType('following')}
+          className={cn(
+            "text-base font-bold transition-all relative py-1",
+            feedType === 'following' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Following
+          {feedType === 'following' && (
+            <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
+          )}
+        </button>
+      </div>
 
       <main className="max-w-md mx-auto">
         <StoryRail />

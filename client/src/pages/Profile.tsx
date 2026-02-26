@@ -137,111 +137,118 @@ export default function Profile() {
               </div>
             </div>
 
-            {isMe ? (
-              <div className="space-y-4 w-full pt-2">
-                {/* Host Actions - Integrated into header block */}
-                {currentUser?.isHost ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      onClick={() => setShowCreateEvent(true)}
-                      className="flex items-center gap-2 px-6 py-3 bg-primary text-white hover:opacity-90 rounded-2xl text-sm font-bold w-full justify-center shadow-md"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      Create Event
-                    </Button>
-                    <Link
-                      href="/host"
-                      className="flex items-center gap-2 px-6 py-3 bg-muted rounded-2xl text-sm font-bold hover:bg-muted/80 transition-colors w-full justify-center"
-                    >
-                      <Crown className="w-4 h-4 text-muted-foreground" />
-                      Host Panel
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    {/* Host Application Status Card - Audit Fix #7 */}
-                    {currentUser?.hostApplicationStatus === "pending" ? (
-                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 transition-all">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center animate-pulse">
-                            <Calendar className="w-4 h-4 text-slate-500" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-bold text-slate-800">Application Under Review</h4>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                              <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">Status: Waiting Approval</span>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Your Social Host application is being verified. Approval takes 24–48 hours after payment check.
-                        </p>
-                        <div className="flex items-center gap-1 mt-3">
-                          <div className="h-1 flex-1 bg-green-500 rounded-full" />
-                          <div className="h-1 flex-1 bg-blue-500 rounded-full animate-pulse" />
-                          <div className="h-1 flex-1 bg-slate-200 rounded-full" />
-                        </div>
-                      </div>
-                    ) : currentUser?.hostApplicationStatus === "rejected" ? (
-                      <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
-                        <h4 className="text-sm font-bold text-red-800">Application Correction Needed</h4>
-                        <p className="text-xs text-red-600 mt-1 mb-3">Please review your submission and reapply in 7 days.</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full rounded-xl border-red-200 text-red-700 font-bold h-9"
-                          onClick={() => setShowHostApplication(true)}
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                    ) : (
+            {/* Primary Actions (Strictly ordered below stats) */}
+            <div className="w-full pt-4 space-y-3">
+              {isMe ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEditProfile(true)}
+                    className="w-full h-12 rounded-xl font-bold border-border/50 text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit Profile
+                  </Button>
+                  
+                  {currentUser?.isHost ? (
+                    <div className="grid grid-cols-2 gap-3">
                       <Button
-                        onClick={() => setShowHostApplication(true)}
-                        className="w-full py-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-2xl text-sm font-bold text-yellow-700 hover:from-yellow-500/20 hover:to-orange-500/20 transition-all flex items-center gap-2"
+                        onClick={() => setShowCreateEvent(true)}
+                        className="flex items-center justify-center gap-2 h-12 bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-bold shadow-md"
                       >
-                        <Crown className="w-4 h-4 text-yellow-600" />
-                        Become a Host
+                        <Calendar className="w-4 h-4" />
+                        Create Event
                       </Button>
-                    )}
-                  </>
-                )}
-
+                      <Link
+                        href="/host"
+                        className="flex items-center justify-center gap-2 h-12 bg-muted rounded-xl font-bold hover:bg-muted/80 transition-colors"
+                      >
+                        <Crown className="w-4 h-4 text-muted-foreground" />
+                        Host Panel
+                      </Link>
+                    </div>
+                  ) : currentUser?.hostApplicationStatus === "pending" ? (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 transition-all">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center animate-pulse">
+                          <Calendar className="w-4 h-4 text-slate-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold text-slate-800">Application Under Review</h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">Status: Waiting Approval</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Your Social Host application is being verified. Approval takes 24–48 hours after payment check.
+                      </p>
+                    </div>
+                  ) : currentUser?.hostApplicationStatus === "rejected" ? (
+                    <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+                      <h4 className="text-sm font-bold text-red-800">Application Correction Needed</h4>
+                      <p className="text-xs text-red-600 mt-1 mb-3">Please review your submission and reapply in 7 days.</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full rounded-lg border-red-200 text-red-700 font-bold h-9"
+                        onClick={() => setShowHostApplication(true)}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => setShowHostApplication(true)}
+                      className="w-full h-12 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl font-bold text-yellow-700 hover:from-yellow-500/20 hover:to-orange-500/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Crown className="w-4 h-4 text-yellow-600" />
+                      Become a Host
+                    </Button>
+                  )}
+                </>
+              ) : (
                 <Button
-                  variant="ghost"
-                  onClick={() => setShowEditProfile(true)}
-                  className="w-full py-6 bg-muted/30 rounded-2xl text-sm font-bold text-muted-foreground hover:bg-muted/50 transition-all flex items-center gap-2"
+                  variant={isFollowing ? "outline" : "default"}
+                  className={cn(
+                    "w-full h-12 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm transition-all",
+                    !isFollowing && "bg-gradient-to-r from-primary to-accent hover:opacity-90 border-none text-white"
+                  )}
+                  onClick={() => isFollowing ? unfollowUser.mutate(user!.id) : followUser.mutate(user!.id)}
+                  disabled={followUser.isPending || unfollowUser.isPending}
                 >
-                  <Edit3 className="w-4 h-4" />
-                  Edit Profile
+                  {isFollowing ? (
+                    <>
+                      <UserMinus className="w-5 h-5" />
+                      Unfollow
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-5 h-5" />
+                      Follow
+                    </>
+                  )}
                 </Button>
-              </div>
-            ) : (
-              <Button
-                variant={isFollowing ? "outline" : "default"}
-                size="lg"
-                className={cn(
-                  "mt-4 w-full rounded-full font-bold gap-2 py-6 text-base shadow-lg",
-                  !isFollowing && "bg-gradient-to-r from-primary to-accent hover:opacity-90 border-none"
-                )}
-                onClick={() => isFollowing ? unfollowUser.mutate(user!.id) : followUser.mutate(user!.id)}
-                disabled={followUser.isPending || unfollowUser.isPending}
-              >
-                {isFollowing ? (
-                  <>
-                    <UserMinus className="w-5 h-5" />
-                    Unfollow
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-5 h-5" />
-                    Follow
-                  </>
-                )}
-              </Button>
-            )}
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Tabs - Phase 6 Requirement */}
+        <div className="flex items-center justify-center gap-8 border-y border-border/30 bg-card py-3 mb-6">
+          <button className="text-sm font-bold text-foreground relative py-1">
+            Moments
+            <span className="absolute -bottom-3 left-0 right-0 h-[2px] bg-primary" />
+          </button>
+          {user?.isHost && (
+            <button className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors py-1">
+              Events
+            </button>
+          )}
+          <button className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors py-1">
+            Rewards
+          </button>
         </div>
 
         {/* Vertical Timeline of Posts */}
