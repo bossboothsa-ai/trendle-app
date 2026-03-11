@@ -120,9 +120,9 @@ export function setupAuth(app: Express) {
     // User Registration
     app.post("/api/register", async (req, res, next) => {
         try {
-            const { username, password, email, phoneNumber } = req.body;
+            const { username, password, email, phoneNumber, displayName, interests } = req.body;
 
-            if (!username || !password || !email || !phoneNumber) {
+            if (!username || !password || !email || !phoneNumber || !displayName) {
                 return res.status(400).json({ message: "All fields are required" });
             }
 
@@ -148,12 +148,14 @@ export function setupAuth(app: Express) {
                 email,
                 phoneNumber,
                 password: hashedPassword,
+                displayName,
+                interests: interests || [],
                 role: "user",
                 status: "pending_verification",
                 emailVerified: false,
                 verificationToken,
                 verificationTokenExpiry,
-                avatar: `https://ui-avatars.com/api/?name=${username}&background=random`
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`
             });
 
             try {

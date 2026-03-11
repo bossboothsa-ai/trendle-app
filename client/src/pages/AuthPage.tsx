@@ -53,8 +53,8 @@ export default function AuthPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#E5D9F2] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+            <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
             </div>
         );
     }
@@ -66,32 +66,32 @@ export default function AuthPage() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#E5D9F2] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen w-full bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decorations */}
-            <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-            <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
             <div className="w-full max-w-sm z-10 flex flex-col items-center space-y-8">
                 {/* Logo Area */}
                 <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 font-display">
+                    <h1 className="text-5xl font-extrabold tracking-tight text-white font-display">
                         Trendle.
                     </h1>
-                    <p className="text-slate-600 text-lg">Where moments happen.</p>
+                    <p className="text-purple-200 text-lg">Where moments happen.</p>
                 </div>
 
                 {/* Auth Form Container */}
-                <div className="w-full bg-white/40 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/50">
+                <div className="w-full bg-purple-900/40 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-purple-700/50">
                     <div className="mb-6 flex justify-center space-x-6">
                         <button
                             onClick={() => setIsLogin(true)}
-                            className={`pb-2 text-sm font-semibold transition-colors ${isLogin ? 'text-purple-700 border-b-2 border-purple-700' : 'text-slate-500'}`}
+                            className={`pb-2 text-sm font-semibold transition-colors ${isLogin ? 'text-purple-300 border-b-2 border-purple-400' : 'text-purple-500 hover:text-purple-400'}`}
                         >
                             Login
                         </button>
                         <button
                             onClick={() => setIsLogin(false)}
-                            className={`pb-2 text-sm font-semibold transition-colors ${!isLogin ? 'text-purple-700 border-b-2 border-purple-700' : 'text-slate-500'}`}
+                            className={`pb-2 text-sm font-semibold transition-colors ${!isLogin ? 'text-purple-300 border-b-2 border-purple-400' : 'text-purple-500 hover:text-purple-400'}`}
                         >
                             Sign Up
                         </button>
@@ -109,10 +109,10 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Username"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
@@ -126,16 +126,16 @@ export default function AuthPage() {
                                                     type="password"
                                                     placeholder="Password"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
                                 <Button
                                     type="submit"
-                                    className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-lg transition-transform active:scale-95"
+                                    className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold shadow-lg transition-transform active:scale-95"
                                     disabled={loginMutation.isPending}
                                 >
                                     {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continue"}
@@ -154,10 +154,10 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Your name"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
@@ -170,10 +170,10 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Username"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
@@ -187,10 +187,10 @@ export default function AuthPage() {
                                                     type="email"
                                                     placeholder="Email address"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
@@ -204,10 +204,10 @@ export default function AuthPage() {
                                                     type="tel"
                                                     placeholder="Phone number (+27...)"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
@@ -221,15 +221,15 @@ export default function AuthPage() {
                                                     type="password"
                                                     placeholder="Create password"
                                                     {...field}
-                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                    className="bg-purple-800 border-purple-600 text-white placeholder:text-purple-400 focus-visible:ring-2 focus-visible:ring-purple-400 rounded-xl h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-900">Interests</label>
+                                    <label className="text-sm font-medium text-purple-200">Interests</label>
                                     <FormField
                                         control={registerForm.control}
                                         name="interests"
@@ -250,8 +250,8 @@ export default function AuthPage() {
                                                                 }}
                                                                 className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                                                                     (field.value || []).includes(interest.toLowerCase())
-                                                                        ? "bg-purple-600 text-white"
-                                                                        : "bg-white/40 text-slate-900 hover:bg-white/60"
+                                                                        ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
+                                                                        : "bg-purple-800 text-purple-200 hover:bg-purple-700 border border-purple-600"
                                                                 }`}
                                                             >
                                                                 {interest}
@@ -259,14 +259,14 @@ export default function AuthPage() {
                                                         ))}
                                                     </div>
                                                 </FormControl>
-                                                <FormMessage />
+                                                <FormMessage className="text-purple-300" />
                                             </FormItem>
                                         )}
                                     />
                                 </div>
                                 <Button
                                     type="submit"
-                                    className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-lg transition-transform active:scale-95"
+                                    className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold shadow-lg transition-transform active:scale-95"
                                     disabled={registerMutation.isPending}
                                 >
                                     {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
@@ -277,7 +277,7 @@ export default function AuthPage() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-purple-300">
                     By continuing, you agree to our Terms & Privacy Policy.
                 </p>
             </div>
