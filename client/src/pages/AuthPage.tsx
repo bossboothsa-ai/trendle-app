@@ -109,7 +109,7 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Username"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -126,7 +126,7 @@ export default function AuthPage() {
                                                     type="password"
                                                     placeholder="Password"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -154,7 +154,7 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Your name"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -170,7 +170,7 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Username"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -187,7 +187,7 @@ export default function AuthPage() {
                                                     type="email"
                                                     placeholder="Email address"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -204,7 +204,7 @@ export default function AuthPage() {
                                                     type="tel"
                                                     placeholder="Phone number (+27...)"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -221,7 +221,7 @@ export default function AuthPage() {
                                                     type="password"
                                                     placeholder="Create password"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
