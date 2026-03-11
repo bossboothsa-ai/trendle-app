@@ -17,10 +17,12 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
+    displayName: z.string().min(2, "Name must be at least 2 characters"),
     username: z.string().min(3, "Username must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     phoneNumber: z.string().min(10, "Invalid phone number"),
     password: z.string().min(6, "Password must be at least 6 characters"),
+    interests: z.array(z.string()).min(1, "Select at least one interest"),
 });
 
 export default function AuthPage() {
@@ -35,7 +37,7 @@ export default function AuthPage() {
 
     const registerForm = useForm<z.infer<typeof registerSchema>>({
         resolver: zodResolver(registerSchema),
-        defaultValues: { username: "", email: "", phoneNumber: "", password: "" },
+        defaultValues: { displayName: "", username: "", email: "", phoneNumber: "", password: "", interests: [] },
     });
 
     useEffect(() => {
@@ -142,7 +144,23 @@ export default function AuthPage() {
                         </Form>
                     ) : (
                         <Form {...registerForm}>
-                            <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
+                            <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                                <FormField
+                                    control={registerForm.control}
+                                    name="displayName"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Your name"
+                                                    {...field}
+                                                    className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                                 <FormField
                                     control={registerForm.control}
                                     name="username"
@@ -150,7 +168,7 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="Pick a username"
+                                                    placeholder="Username"
                                                     {...field}
                                                     className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
                                                 />
@@ -184,7 +202,7 @@ export default function AuthPage() {
                                             <FormControl>
                                                 <Input
                                                     type="tel"
-                                                    placeholder="Phone number"
+                                                    placeholder="Phone number (+27...)"
                                                     {...field}
                                                     className="bg-white/60 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 rounded-xl h-12"
                                                 />
@@ -210,6 +228,42 @@ export default function AuthPage() {
                                         </FormItem>
                                     )}
                                 />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-900">Interests</label>
+                                    <FormField
+                                        control={registerForm.control}
+                                        name="interests"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {["Coffee", "Music", "Nightlife", "Food", "Art", "Sports", "Photography", "Travel"].map((interest) => (
+                                                            <button
+                                                                key={interest}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const current = field.value || [];
+                                                                    const updated = current.includes(interest.toLowerCase())
+                                                                        ? current.filter(i => i !== interest.toLowerCase())
+                                                                        : [...current, interest.toLowerCase()];
+                                                                    field.onChange(updated);
+                                                                }}
+                                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                                                    (field.value || []).includes(interest.toLowerCase())
+                                                                        ? "bg-purple-600 text-white"
+                                                                        : "bg-white/40 text-slate-900 hover:bg-white/60"
+                                                                }`}
+                                                            >
+                                                                {interest}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                                 <Button
                                     type="submit"
                                     className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-lg transition-transform active:scale-95"

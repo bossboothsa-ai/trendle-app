@@ -30,6 +30,15 @@ export function StoryRail() {
   });
 
 
+  // Show empty state if no stories and no user
+  if (!user) {
+    return (
+      <div className="w-full h-20 flex items-center justify-center px-4 text-center">
+        <p className="text-sm text-muted-foreground">Sign in to view and share stories</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto hide-scrollbar py-4 pl-4 space-x-4 flex items-start">
       {/* My Story Add Button */}
@@ -51,26 +60,32 @@ export function StoryRail() {
       </div>
 
       {/* Friends Stories */}
-      {uniqueUsers.map((storyUser) => (
-        <div
-          key={storyUser.id}
-          className="flex flex-col items-center gap-1 min-w-[64px] cursor-pointer group"
-          onClick={() => {
-            setSelectedUserId(storyUser.id);
-          }}
-        >
-          <div className="w-16 h-16 rounded-full p-[3px] bg-[#B8A9FF] shadow-lg shadow-[rgba(184,169,255,0.3)] group-hover:scale-105 transition-transform" style={{ boxShadow: '0 0 15px rgba(184,169,255,0.35)' }}>
-            <div className="w-full h-full rounded-full bg-white overflow-hidden">
-              <img
-                src={storyUser.avatar}
-                alt={storyUser.username}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-          <span className="text-xs font-medium truncate-name text-center w-full px-1">{storyUser.username}</span>
+      {uniqueUsers.length === 0 ? (
+        <div className="w-full text-center py-6">
+          <p className="text-sm text-muted-foreground">No stories yet. Follow users to see their stories!</p>
         </div>
-      ))}
+      ) : (
+        uniqueUsers.map((storyUser) => (
+          <div
+            key={storyUser.id}
+            className="flex flex-col items-center gap-1 min-w-[64px] cursor-pointer group"
+            onClick={() => {
+              setSelectedUserId(storyUser.id);
+            }}
+          >
+            <div className="w-16 h-16 rounded-full p-[3px] bg-[#B8A9FF] shadow-lg shadow-[rgba(184,169,255,0.3)] group-hover:scale-105 transition-transform" style={{ boxShadow: '0 0 15px rgba(184,169,255,0.35)' }}>
+              <div className="w-full h-full rounded-full bg-white overflow-hidden">
+                <img
+                  src={storyUser.avatar}
+                  alt={storyUser.username}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <span className="text-xs font-medium truncate-name text-center w-full px-1">{storyUser.username}</span>
+          </div>
+        ))
+      )}
 
       {/* Story Modal */}
       {selectedUserId && (

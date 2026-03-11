@@ -79,32 +79,59 @@ const DEV_USER: User = {
 export function AuthProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
 
-    // IN DEV MODE: ALWAYS RETURN SUCCESSFUL USER
-    const user = DEV_USER;
-    const isLoading = false;
-    const error = null;
+    // Fetch current user
+    const { data: user, isLoading } = useQuery({
+        queryKey: ["/api/users/me"],
+        queryFn: getQueryFn({ on401: "returnNull" }),
+        retry: false,
+    });
 
+    // Login mutation
     const loginMutation = useMutation({
-        mutationFn: async () => { return { user: DEV_USER }; },
-        onSuccess: () => { toast({ title: "Dev Mode: Login Simulated" }); },
+        mutationFn: async (data: any) => {
+            const res = await apiRequest("POST", "/api/login", data);
+            return await res.json();
+        },
+        onSuccess: (data) => {
+            queryClient.setQueryData(["/api/users/me"], data.user);
+            toast({ title: "Logged in successfully" });
+        },
+        onError: () => {
+            toast({ title: "Login failed", description: "Check your credentials" });
+        },
     });
 
+    // Register mutation
     const registerMutation = useMutation({
-        mutationFn: async () => { return { user: DEV_USER }; },
-        onSuccess: () => { toast({ title: "Dev Mode: Register Simulated" }); },
+        mutationFn: async (data: any) => {
+            const res = await apiRequest("POST", "/api/register", data);
+            return await res.json();
+        },
+        onSuccess: () => {
+            toast({ title: "Registration successful", description: "Check your email to verify" });
+        },
+        onError: () => {
+            toast({ title: "Registration failed", description: "Try again" });
+        },
     });
 
+    // Logout mutation
     const logoutMutation = useMutation({
-        mutationFn: async () => { },
-        onSuccess: () => { toast({ title: "Dev Mode: Logout Ignored" }); },
+        mutationFn: async () => {
+            await apiRequest("POST", "/api/logout", {});
+        },
+        onSuccess: () => {
+            queryClient.setQueryData(["/api/users/me"], null);
+            toast({ title: "Logged out" });
+        },
     });
 
     return (
         <AuthContext.Provider
             value={{
-                user,
+                user: user || null,
                 isLoading,
-                error,
+                error: null,
                 loginMutation,
                 logoutMutation,
                 registerMutation,

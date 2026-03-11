@@ -17,11 +17,9 @@ const LaunchContext = createContext<LaunchContextType | undefined>(undefined);
 
 export const LaunchProvider = ({ children }: { children: ReactNode }) => {
     const [isSoftLaunch, setIsSoftLaunch] = useState(() => {
-        // Priority: 1. APP_MODE only
-        if (process.env.APP_MODE === 'soft_launch') return true;
-
-        // Always disable soft launch by default - production mode
+        // Always production mode - no soft launch
         localStorage.removeItem("TRENDLE_SOFT_LAUNCH");
+        localStorage.removeItem("TRENDLE_DEMO_MODE");
         return false;
     });
 

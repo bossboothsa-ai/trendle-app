@@ -2,13 +2,8 @@
 // ============================================
 
 export const isInDemoMode = () => {
-    if (typeof window === "undefined") return false;
-    
-    // Support soft launch mode as a "live" feeling demo
-    if (process.env.APP_MODE === 'soft_launch') return true;
-
-    // Explicit opt-in to demo mode only via localStorage
-    return localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
+    // DEMO MODE IS DISABLED - App runs in production only
+    return false;
 };
 
 export const DEMO_USERS = [
