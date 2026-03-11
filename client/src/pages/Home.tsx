@@ -39,29 +39,29 @@ export default function Home() {
       <Header title="Trendle" />
 
       {/* Feed Toggle */}
-      <div className="sticky top-[60px] z-30 bg-background/95 backdrop-blur-md flex items-center justify-center gap-8 border-b border-border/20 pt-2 pb-2">
+      <div className="sticky top-[64px] z-30 bg-background/95 backdrop-blur-md flex items-center justify-center gap-8 border-b border-border/20 px-4 py-3">
         <button
           onClick={() => setFeedType('foryou')}
           className={cn(
-            "text-base font-bold transition-all relative py-1",
+            "text-base font-semibold transition-all relative px-2 py-2",
             feedType === 'foryou' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
           )}
         >
           For You
           {feedType === 'foryou' && (
-            <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
           )}
         </button>
         <button
           onClick={() => setFeedType('following')}
           className={cn(
-            "text-base font-bold transition-all relative py-1",
+            "text-base font-semibold transition-all relative px-2 py-2",
             feedType === 'following' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
           )}
         >
           Following
           {feedType === 'following' && (
-            <span className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
           )}
         </button>
       </div>
@@ -77,9 +77,9 @@ export default function Home() {
           ) : posts?.length === 0 ? (
             <div className="text-center py-20 px-8 mx-4 bg-muted/10 rounded-3xl border border-dashed border-border">
               <Compass className="w-10 h-10 mx-auto mb-4 text-primary/30" />
-              <h3 className="text-lg text-weight-bold mb-2">Discovery is beginning!</h3>
+              <h3 className="text-lg font-semibold mb-2">No moments yet</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Moments in your area are starting to trend. Be the first to capture the vibe!
+                Start following users and explore trending moments to build your feed.
               </p>
             </div>
           ) : (

@@ -7,11 +7,8 @@ export const isInDemoMode = () => {
     // Support soft launch mode as a "live" feeling demo
     if (process.env.APP_MODE === 'soft_launch') return true;
 
-    const isDemoHost =
-        window.location.hostname.includes("github.io") ||
-        window.location.hostname.includes("localhost") ||
-        window.location.hostname.includes("onrender.com");
-    return localStorage.getItem("TRENDLE_DEMO_MODE") === "true" || isDemoHost;
+    // Explicit opt-in to demo mode only via localStorage
+    return localStorage.getItem("TRENDLE_DEMO_MODE") === "true";
 };
 
 export const DEMO_USERS = [
