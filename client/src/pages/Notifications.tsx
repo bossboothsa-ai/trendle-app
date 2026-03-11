@@ -94,10 +94,19 @@ export default function Notifications() {
       </header>
 
       <div className="space-y-3">
-        {notifications?.map((notif) => (
+        {notifications?.map((notif: any) => (
           <div key={notif.id} className="flex items-start gap-4 p-4 glass-card hover:bg-white/5 transition-colors">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden shrink-0" /> 
+              <div className="w-12 h-12 rounded-full bg-white/10 overflow-hidden shrink-0 border border-white/10">
+                <img 
+                  src={notif.actor?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${notif.id}`} 
+                  className="w-full h-full object-cover"
+                  alt="actor"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback";
+                  }}
+                />
+              </div> 
               <div className={cn(
                 "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#140A2E]",
                 getColor(notif.type)
@@ -107,9 +116,9 @@ export default function Notifications() {
             </div>
             <div className="flex-1">
               <p className="text-[14px] leading-snug">
-                <span className="font-bold">Someone</span> {notif.message}
+                <span className="font-bold text-white">{notif.actor?.username || "Someone"}</span> {notif.message}
               </p>
-              <p className="text-[12px] text-muted-foreground mt-1">
+              <p className="text-[12px] text-muted-foreground mt-1 font-medium">
                 {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
               </p>
             </div>

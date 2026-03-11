@@ -2,6 +2,7 @@ import { Bell, Briefcase, Search, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useNotifications } from "@/hooks/use-trendle";
 
 interface HeaderProps {
     title?: string;
@@ -21,6 +22,8 @@ export function Header({
     className 
 }: HeaderProps) {
     const { toast } = useToast();
+    const { data: notifications } = useNotifications();
+    const hasUnread = notifications?.some((n: any) => !n.read);
 
     return (
         <header className={cn(
@@ -67,7 +70,9 @@ export function Header({
                         <Link href="/notifications">
                             <button className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors relative">
                                 <Bell className="w-5 h-5 text-foreground" />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[var(--bg-surface)]"></span>
+                                {hasUnread && (
+                                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[var(--bg-surface)] animate-pulse"></span>
+                                )}
                             </button>
                         </Link>
                     )}

@@ -21,48 +21,9 @@ export async function registerRoutes(
 
   // === USERS ===
   app.get(api.users.me.path, async (req, res) => {
-    // If authenticated, return the real user
     if (req.isAuthenticated()) {
       return res.json(req.user);
     }
-
-    // Otherwise, if in soft launch mode, return a realistic mock user
-    if (process.env.APP_MODE === 'soft_launch') {
-      return res.json({
-        id: 101,
-        username: "alex_travels",
-        displayName: "Alexander Thorne",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
-        cover: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&q=80",
-        bio: "Explorer of urban vibes and hidden gems in Cape Town. Marketing lead by day, foodie by night. ☕🍕🍸",
-        location: "Gardens, Cape Town",
-        level: "Gold",
-        points: 850,
-        followersCount: 842,
-        followingCount: 315,
-        joinedDate: "Feb 2024",
-        socialLinks: { instagram: "alex_explorer", twitter: "a_thorne" },
-        interests: ["coffee", "cocktails", "photography", "hiking"],
-        isHost: false,
-        hostName: null,
-        hostBio: null,
-        hostVerified: false,
-        hostCreatedAt: null,
-        hostMembershipTier: null,
-        hostMembershipStatus: null,
-        hostMembershipStartDate: null,
-        hostMembershipEndDate: null,
-        hostCategories: [],
-        hostApplicationStatus: null,
-        hostApplicationDate: null,
-        paymentReference: null,
-        proofOfPayment: null,
-        paymentVerified: false,
-        paymentDate: null
-      });
-    }
-
-    // Default to unauthenticated
     res.sendStatus(401);
   });
 
@@ -126,9 +87,10 @@ export async function registerRoutes(
   });
 
   app.post(api.users.follow.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const followingId = Number(req.params.id);
-      const followerId = 1; // Hardcoded me
+      const followerId = (req.user as any).id;
       const follow = await storage.createFollow(followerId, followingId);
       res.json({ success: true, follow });
     } catch (err: any) {
@@ -137,9 +99,10 @@ export async function registerRoutes(
   });
 
   app.post(api.users.unfollow.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const followingId = Number(req.params.id);
-      const followerId = 1; // Hardcoded me
+      const followerId = (req.user as any).id;
       await storage.unfollowUser(followerId, followingId);
       res.json({ success: true });
     } catch (err: any) {
@@ -264,9 +227,10 @@ export async function registerRoutes(
   });
 
   app.post(api.posts.like.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const postId = Number(req.params.id);
-      const userId = 1; // Always "Me" for now
+      const userId = (req.user as any).id;
 
       const existing = await storage.getLike(userId, postId);
       if (existing) return res.json({ success: true, points: 0 }); // Already liked
@@ -289,10 +253,15 @@ export async function registerRoutes(
   });
 
   app.post(api.comments.create.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const postId = Number(req.params.postId);
       const { text } = req.body;
-      const comment = await storage.createComment({ postId, userId: 1, text });
+      const comment = await storage.createComment({ 
+        postId, 
+        userId: (req.user as any).id, 
+        text 
+      });
       res.status(201).json(comment);
     } catch (err) {
       res.status(400).json({ message: "Error creating comment" });
@@ -310,10 +279,11 @@ export async function registerRoutes(
   });
 
   app.post(api.rewards.redeem.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const rewardId = Number(req.params.id);
       const { type } = req.body;
-      const userId = 1;
+      const userId = (req.user as any).id;
       await storage.redeemReward(userId, rewardId, type);
       const user = await storage.getUser(userId);
       res.json({ success: true, newPoints: user!.points });
@@ -323,8 +293,9 @@ export async function registerRoutes(
   });
 
   app.get(api.rewards.history.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const history = await storage.getRewardHistory(1);
+      const history = await storage.getRewardHistory((req.user as any).id);
       res.json(history);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -333,8 +304,9 @@ export async function registerRoutes(
 
   // === WALLET & CASHOUTS ===
   app.get(api.wallet.transactions.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const transactions = await storage.getTransactions(1);
+      const transactions = await storage.getTransactions((req.user as any).id);
       res.json(transactions);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -342,8 +314,9 @@ export async function registerRoutes(
   });
 
   app.get(api.wallet.cashouts.list.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const cashouts = await storage.getCashouts(1);
+      const cashouts = await storage.getCashouts((req.user as any).id);
       res.json(cashouts);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -351,9 +324,10 @@ export async function registerRoutes(
   });
 
   app.post(api.wallet.cashouts.create.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const input = api.wallet.cashouts.create.input.parse(req.body);
-      const cashout = await storage.createCashout({ ...input, userId: 1 });
+      const cashout = await storage.createCashout({ ...input, userId: (req.user as any).id });
       res.status(201).json(cashout);
     } catch (err: any) {
       res.status(400).json({ message: err.message });
@@ -371,20 +345,21 @@ export async function registerRoutes(
   });
 
   app.post(api.surveys.submit.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const id = Number(req.params.id);
       const { answers } = req.body;
-      await storage.submitSurveyResponse(1, id, answers);
+      await storage.submitSurveyResponse((req.user as any).id, id, answers);
       res.json({ success: true, points: 100 });
     } catch (err: any) {
       res.status(400).json({ message: err.message });
     }
   });
 
-  // === DAILY TASKS ===
   app.get(api.dailyTasks.list.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const t = await storage.getDailyTasks(1);
+      const t = await storage.getDailyTasks((req.user as any).id);
       res.json(t);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -392,9 +367,10 @@ export async function registerRoutes(
   });
 
   app.post(api.dailyTasks.complete.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const id = Number(req.params.id);
-      await storage.completeDailyTask(1, id);
+      await storage.completeDailyTask((req.user as any).id, id);
       res.json({ success: true, points: 10 });
     } catch (err: any) {
       res.status(400).json({ message: err.message });
@@ -403,8 +379,9 @@ export async function registerRoutes(
 
   // === NOTIFICATIONS ===
   app.get(api.notifications.list.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
-      const notifs = await storage.getNotifications(1);
+      const notifs = await storage.getNotifications((req.user as any).id);
       res.json(notifs);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
@@ -461,68 +438,7 @@ export async function registerRoutes(
     }
   });
 
-  // === SIMULATION (ENABLED FOR SOFT LAUNCH) ===
-  // Every 15 seconds, inject a random like or comment on a random post
-  if (process.env.APP_MODE === 'soft_launch') {
-    setInterval(async () => {
-      try {
-        const allPosts = await storage.getPosts();
-        if (allPosts.length === 0) return;
-
-        const randomPost = allPosts[Math.floor(Math.random() * allPosts.length)];
-        const randomActorId = Math.floor(Math.random() * 4) + 2; // Users 2-5
-
-        if (Math.random() > 0.5) {
-          // Mock Like
-          const existing = await storage.getLike(randomActorId, randomPost.id);
-          if (!existing) {
-            await storage.createLike({ userId: randomActorId, postId: randomPost.id });
-            if (randomPost.userId === 1) {
-              await storage.createNotification({
-                userId: 1, type: "like", actorId: randomActorId,
-                message: "Someone liked your moment!"
-              });
-            }
-          }
-        } else {
-          // Mock Comment
-          const texts = ["Love this!", "Where is this?", "So cool!", "Vibes ✨", "Need to go here."];
-          const text = texts[Math.floor(Math.random() * texts.length)];
-          await storage.createComment({ userId: randomActorId, postId: randomPost.id, text });
-          if (randomPost.userId === 1) {
-            await storage.createNotification({
-              userId: 1, type: "comment", actorId: randomActorId,
-              message: "Someone commented on your moment"
-            });
-          }
-        }
-      } catch (e) {
-        console.error("Simulation error", e);
-      }
-    }, 15000);
-
-    // Cashout Status Simulation
-    setInterval(async () => {
-      try {
-        const cashouts = await storage.getCashouts(1);
-        const pending = cashouts.filter(c => c.status === "pending");
-        if (pending.length > 0) {
-          const target = pending[0];
-          const nextStatus = Math.random() > 0.5 ? "approved" : "paid";
-          await storage.updateCashoutStatus(target.id, nextStatus);
-
-          await storage.createNotification({
-            userId: 1,
-            type: "reward",
-            actorId: 1,
-            message: `Your cashout request for ${target.amount} pts has been ${nextStatus}!`
-          });
-        }
-      } catch (e) {
-        console.error("Cashout simulation error", e);
-      }
-    }, 30000); // Check every 30 seconds
-  }
+  // No simulation or soft-launch logic remains here for production.
 
   // Register business routes
   registerBusinessRoutes(app, storage);
@@ -681,7 +597,8 @@ export async function registerRoutes(
   // Get single event
   app.get(api.events.get.path, async (req, res) => {
     try {
-      const event = await storage.getEvent(Number(req.params.id), 1); // userId 1 for now
+      const userId = req.isAuthenticated() ? (req.user as any).id : undefined;
+      const event = await storage.getEvent(Number(req.params.id), userId);
       if (!event) return res.status(404).json({ message: "Event not found" });
       res.json(event);
     } catch (err: any) {

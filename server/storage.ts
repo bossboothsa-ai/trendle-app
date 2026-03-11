@@ -10,7 +10,7 @@ import {
   verificationRequests, systemLogs, type VerificationRequest, type SystemLog,
   events, eventAttendees, eventAnalytics, eventMoments, type Event, type EventAttendee, type EventAnalytics
 } from "@shared/schema";
-import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, inArray, ne } from "drizzle-orm";
 import { AntiFraudGuard } from "./antiFraudGuard";
 
 export interface IStorage {
@@ -402,6 +402,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserPoints(id: number, points: number, reason?: string): Promise<User> {
+    const user = await db.select().from(users).where(eq(users.id, id)).then(rows => rows[0]);
+    if (!user) throw new Error("User not found");
+
+    const diff = points - user.points;
+
     const [updated] = await db.update(users)
       .set({
         points: points,
@@ -411,11 +416,10 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     // Log points history
-    if (reason && updated) {
-      // Simplified points history logging
+    if (reason && updated && diff !== 0) {
       await db.insert(pointsHistory).values({
         userId: id,
-        amount: points - (updated.points || 0), // Incorrect diff calculation if points relied on old val, but acceptable for now
+        amount: diff,
         reason: reason,
       });
     }
@@ -423,7 +427,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSuggestedUsers(userId: number): Promise<User[]> {
-    return await db.select().from(users).limit(5);
+    return await db.select()
+      .from(users)
+      .where(and(
+        ne(users.id, userId),
+        eq(users.role, "user"),
+        eq(users.status, "active")
+      ))
+      .limit(5);
   }
 
   async getPlaces(): Promise<Place[]> {
@@ -543,15 +554,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async redeemReward(userId: number, rewardId: number, type: string): Promise<UserReward> {
-    const [reward] = await db.select().from(rewards).where(eq(rewards.id, rewardId));
-    const user = await this.getUser(userId);
+    return await db.transaction(async (tx) => {
+      const [reward] = await tx.select().from(rewards).where(eq(rewards.id, rewardId));
+      const [user] = await tx.select().from(users).where(eq(users.id, userId));
 
-    if (!reward || !user) throw new Error("Invalid reward or user");
-    if (user.points < reward.cost) throw new Error("Not enough points");
+      if (!reward || !user) throw new Error("Invalid reward or user");
+      if (user.points < reward.cost) throw new Error("Not enough points");
 
-    await this.updateUserPoints(userId, user.points - reward.cost);
-    const [redemption] = await db.insert(userRewards).values({ userId, rewardId, type, status: "pending" }).returning();
-    return redemption;
+      const newPoints = user.points - reward.cost;
+      
+      // Update user points
+      await tx.update(users)
+        .set({
+          points: newPoints,
+          level: newPoints >= 1500 ? "Platinum" : newPoints >= 500 ? "Gold" : "Silver"
+        })
+        .where(eq(users.id, userId));
+
+      // Log points history
+      await tx.insert(pointsHistory).values({
+        userId,
+        amount: -reward.cost,
+        reason: `Redeemed ${reward.title}`,
+      });
+
+      const [redemption] = await tx.insert(userRewards).values({ 
+        userId, 
+        rewardId, 
+        type, 
+        status: "pending" 
+      }).returning();
+
+      return redemption;
+    });
   }
 
   async getRewardHistory(userId: number): Promise<(UserReward & { reward: Reward })[]> {
@@ -621,10 +656,21 @@ export class DatabaseStorage implements IStorage {
     return comp;
   }
 
-  async getNotifications(userId: number): Promise<Notification[]> {
-    return await db.select().from(notifications)
+  async getNotifications(userId: number): Promise<any[]> {
+    const list = await db.select().from(notifications)
       .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt));
+    
+    const results = [];
+    for (const n of list) {
+        if (n.actorId) {
+            const [actor] = await db.select().from(users).where(eq(users.id, n.actorId));
+            results.push({ ...n, actor });
+        } else {
+            results.push(n);
+        }
+    }
+    return results;
   }
 
   async createNotification(notif: Partial<Notification>): Promise<Notification> {
@@ -743,15 +789,9 @@ export class DatabaseStorage implements IStorage {
   // === BUSINESS FEATURES IMPLEMENTATION ===
 
   async getInvoices(businessId: number): Promise<any[]> {
-    // For now, return mock invoices based on the business account
-    const account = await this.getBusinessAccount(businessId);
-    if (!account) return [];
-
-    return [
-      { id: "INV-2026-001", date: "2026-01-01", amount: account.monthlyFee || 250, status: "Paid", method: "Mastercard •••• 4242" },
-      { id: "INV-2026-002", date: "2026-02-01", amount: account.monthlyFee || 250, status: "Paid", method: "Mastercard •••• 4242" },
-      { id: "INV-2026-003", date: "2026-03-01", amount: account.monthlyFee || 250, status: "Due", method: "Invoice" },
-    ];
+    // For now, return real invoices from the DB structure if they existed.
+    // Since we don't have an 'invoices' table yet, return empty array for production safety.
+    return [];
   }
 
   async updateSubscription(businessId: number, plan: string): Promise<BusinessAccount> {
@@ -813,7 +853,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(surveys.placeId, placeId));
 
     const total = responses.length;
-    const avg = total > 0 ? 4.8 : 0; // Mock avg for now as rating logic depends on survey structure
+    // Calculate real avg if possible, otherwise 0
+    let avg = 0;
+    if (total > 0) {
+      // In a real app we'd aggregate specific numeric questions
+      avg = 0; // Keep as 0 until real logic is added
+    }
 
     return {
       totalResponses: total,
@@ -821,8 +866,8 @@ export class DatabaseStorage implements IStorage {
       recentFeedback: responses.map(r => ({
         id: r.survey_responses.id,
         date: new Date(r.survey_responses.createdAt).toLocaleDateString(),
-        rating: 5, // Mock
-        comment: (r.survey_responses.answers as any).comment || "Great service!",
+        rating: 0, 
+        comment: (r.survey_responses.answers as any).comment || "N/A",
       })).slice(0, 10)
     };
   }
@@ -1589,7 +1634,7 @@ export class DatabaseStorage implements IStorage {
       totalAttendees += attendees.filter(a => a.checkedIn).length;
     }
 
-    // Mock promotion count
+    // Total promotions count
     const totalPromotions = hostEvents.filter(e => e.isFeatured || e.isTrending).length;
 
     return {

@@ -61,6 +61,14 @@ export default function Explore() {
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-64 bg-muted rounded-3xl animate-pulse" />
           ))
+        ) : filteredPlaces?.length === 0 ? (
+          <div className="text-center py-20 px-8 bg-muted/10 rounded-3xl border border-dashed border-border mt-4">
+            <MapPin className="w-10 h-10 mx-auto mb-4 text-primary/30" />
+            <h3 className="text-lg font-bold mb-2">No places available yet</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              We're currently scouting for the best spots in CPT. Check back soon for new vibes!
+            </p>
+          </div>
         ) : (
           filteredPlaces?.map((place, i) => (
             <motion.div
@@ -88,12 +96,12 @@ export default function Explore() {
                     {place.category}
                   </span>
                   <div className="flex items-center gap-1 text-yellow-400">
-                    <Star className="w-4 h-4 fill-current" />
+                    < Star className="w-4 h-4 fill-current" />
                     <span className="text-sm font-bold">4.8</span>
                   </div>
                 </div>
-                <h3 className="text-2xl text-weight-bold mb-1 font-display">{place.name}</h3>
-                <div className="flex items-center gap-4 text-sm text-weight-regular text-gray-300">
+                <h3 className="text-2xl font-bold mb-1 font-display">{place.name}</h3>
+                <div className="flex items-center gap-4 text-sm font-normal text-gray-300">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     <span>{place.distance}</span>

@@ -68,7 +68,7 @@ export function StoryRail() {
               />
             </div>
           </div>
-          <span className="text-xs font-medium">{storyUser.username}</span>
+          <span className="text-xs font-medium truncate-name text-center w-full px-1">{storyUser.username}</span>
         </div>
       ))}
 
