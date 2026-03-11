@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
 
     // Fetch current user
-    const { data: user, isLoading } = useQuery({
+    const { data: user, isLoading } = useQuery<User | null>({
         queryKey: ["/api/users/me"],
         queryFn: getQueryFn({ on401: "returnNull" }),
         retry: false,
@@ -107,8 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const res = await apiRequest("POST", "/api/register", data);
             return await res.json();
         },
-        onSuccess: () => {
-            toast({ title: "Registration successful", description: "Check your email to verify" });
+        onSuccess: (data) => {
+            queryClient.setQueryData(["/api/users/me"], data.user);
+            toast({ title: "Registration successful", description: "Welcome to Trendle!" });
         },
         onError: () => {
             toast({ title: "Registration failed", description: "Try again" });

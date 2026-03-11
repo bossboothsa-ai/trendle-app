@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import { User, InsertUser } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { sendVerificationEmail } from "./email";
+import { sendVerificationEmail, sendWelcomeEmail } from "./email";
 import { z } from "zod";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -89,6 +89,15 @@ export function setupAuth(app: Express) {
             req.login(user, (loginErr) => {
                 if (loginErr) return next(loginErr);
 
+                // Handle Remember Me
+                if (req.body.rememberMe === false) {
+                    // Set as session cookie (expires when browser closes)
+                    req.session.cookie.maxAge = undefined;
+                } else {
+                    // Reset to default (30 days) if explicitly checked or implicit
+                    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+                }
+
                 // Determine redirect based on role
                 let redirect = "/home";
                 if (user.role === "business") redirect = "/business/dashboard";
@@ -107,7 +116,11 @@ export function setupAuth(app: Express) {
     app.post("/api/logout", (req, res, next) => {
         req.logout((err) => {
             if (err) return next(err);
-            res.sendStatus(200);
+            req.session.destroy((destroyErr) => {
+                if (destroyErr) return next(destroyErr);
+                res.clearCookie("connect.sid"); // Ensure cookie is also cleared
+                res.sendStatus(200);
+            });
         });
     });
 
@@ -151,21 +164,37 @@ export function setupAuth(app: Express) {
                 displayName,
                 interests: interests || [],
                 role: "user",
-                status: "pending_verification",
-                emailVerified: false,
-                verificationToken,
-                verificationTokenExpiry,
+                status: "active",
+                emailVerified: true,
+                verificationToken: null,
+                verificationTokenExpiry: null,
                 avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`
             });
 
-            try {
-                await sendVerificationEmail(email, verificationToken, 'user');
-            } catch (error) {
-                console.error("Failed to send verification email", error);
-                // In production might want to rollback user creation
-            }
+            // Log user in directly
+            req.login(user, (err) => {
+                if (err) return next(err);
+                
+                // Handle Remember Me
+                if (req.body.rememberMe === false) {
+                    req.session.cookie.maxAge = undefined;
+                } else {
+                    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+                }
 
-            res.status(201).json({ message: "Registration successful. Please check your email." });
+                res.status(201).json({ 
+                    message: "Registration successful", 
+                    user,
+                    redirect: "/home"
+                });
+            });
+
+            // Still send an email, but as a welcome notification
+            try {
+                await sendWelcomeEmail(email, displayName);
+            } catch (error) {
+                console.error("Failed to send welcome notification", error);
+            }
         } catch (err) {
             next(err);
         }

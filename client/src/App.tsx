@@ -2,6 +2,7 @@ import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { Loader2 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
@@ -57,7 +58,24 @@ function RootRoute() {
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="min-h-screen bg-background" />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 flex flex-col items-center justify-center p-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-purple-500 blur-2xl opacity-20 animate-pulse rounded-full" />
+          <img 
+            src="/favicon.png" 
+            alt="Trendle Logo" 
+            className="w-24 h-24 relative animate-bounce mb-8 opacity-80"
+          />
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <p className="text-purple-300 font-medium animate-pulse tracking-wide">
+            Trendle is loading...
+          </p>
+        </div>
+      </div>
+    );
   }
   
   if (!user) {

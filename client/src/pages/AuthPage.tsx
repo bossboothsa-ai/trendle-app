@@ -9,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 // Minimalist Schemas
 const loginSchema = z.object({
     username: z.string().min(1, "Username is required"),
     password: z.string().min(1, "Password is required"),
+    rememberMe: z.boolean().default(true),
 });
 
 const registerSchema = z.object({
@@ -23,6 +26,7 @@ const registerSchema = z.object({
     phoneNumber: z.string().min(10, "Invalid phone number"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     interests: z.array(z.string()).min(1, "Select at least one interest"),
+    rememberMe: z.boolean().default(true),
 });
 
 export default function AuthPage() {
@@ -32,12 +36,12 @@ export default function AuthPage() {
 
     const loginForm = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
-        defaultValues: { username: "", password: "" },
+        defaultValues: { username: "", password: "", rememberMe: true },
     });
 
     const registerForm = useForm<z.infer<typeof registerSchema>>({
         resolver: zodResolver(registerSchema),
-        defaultValues: { displayName: "", username: "", email: "", phoneNumber: "", password: "", interests: [] },
+        defaultValues: { displayName: "", username: "", email: "", phoneNumber: "", password: "", interests: [], rememberMe: true },
     });
 
     useEffect(() => {
@@ -68,8 +72,8 @@ export default function AuthPage() {
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decorations */}
-            <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
-            <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
 
             <div className="w-full max-w-sm z-10 flex flex-col items-center space-y-8">
                 {/* Logo Area */}
@@ -81,7 +85,7 @@ export default function AuthPage() {
                 </div>
 
                 {/* Auth Form Container */}
-                <div className="w-full bg-purple-900/40 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-purple-700/50">
+                <div className="w-full bg-purple-900/40 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-purple-700/50 relative overflow-visible">
                     <div className="mb-6 flex justify-center space-x-6">
                         <button
                             onClick={() => setIsLogin(true)}
@@ -109,7 +113,8 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Username"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="username"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -126,13 +131,34 @@ export default function AuthPage() {
                                                     type="password"
                                                     placeholder="Password"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="current-password"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
+                                
+                                <FormField
+                                    control={loginForm.control}
+                                    name="rememberMe"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    className="border-purple-400 data-[state=checked]:bg-purple-500"
+                                                />
+                                            </FormControl>
+                                            <Label className="text-sm font-medium text-purple-200 cursor-pointer">
+                                                Remember Me
+                                            </Label>
+                                        </FormItem>
+                                    )}
+                                />
+                                
                                 <Button
                                     type="submit"
                                     className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold shadow-lg transition-transform active:scale-95"
@@ -144,7 +170,7 @@ export default function AuthPage() {
                         </Form>
                     ) : (
                         <Form {...registerForm}>
-                            <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                            <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
                                 <FormField
                                     control={registerForm.control}
                                     name="displayName"
@@ -154,7 +180,8 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Your name"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="name"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -170,7 +197,8 @@ export default function AuthPage() {
                                                 <Input
                                                     placeholder="Username"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="username"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -187,7 +215,8 @@ export default function AuthPage() {
                                                     type="email"
                                                     placeholder="Email address"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="email"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -204,7 +233,8 @@ export default function AuthPage() {
                                                     type="tel"
                                                     placeholder="Phone number (+27...)"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="tel"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
@@ -221,13 +251,34 @@ export default function AuthPage() {
                                                     type="password"
                                                     placeholder="Create password"
                                                     {...field}
-                                                    className="bg-purple-700 border-2 border-purple-500 !text-white placeholder:text-purple-300 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium"
+                                                    autoComplete="new-password"
+                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
                                                 />
                                             </FormControl>
                                             <FormMessage className="text-purple-300" />
                                         </FormItem>
                                     )}
                                 />
+                                
+                                <FormField
+                                    control={registerForm.control}
+                                    name="rememberMe"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    className="border-purple-400 data-[state=checked]:bg-purple-500"
+                                                />
+                                            </FormControl>
+                                            <Label className="text-sm font-medium text-purple-200 cursor-pointer">
+                                                Remember Me
+                                            </Label>
+                                        </FormItem>
+                                    )}
+                                />
+                                
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-purple-200">Interests</label>
                                     <FormField
