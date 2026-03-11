@@ -50,11 +50,30 @@ import BusinessLayout from "@/layouts/BusinessLayout";
 import AdminLayout from "@/layouts/AdminLayout";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useAuth } from "@/hooks/use-auth";
+
+// Root route handler - redirects to auth if not logged in
+function RootRoute() {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="min-h-screen bg-background" />;
+  }
+  
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  return <UserLayout><Home /></UserLayout>;
+}
 
 function Router() {
   return (
     <ErrorBoundary>
       <Switch>
+        {/* === ROOT - Check auth state === */}
+        <Route path="/" component={RootRoute} />
+        
         {/* === PUBLIC & AUTH === */}
         <Route path="/user/login" component={AuthPage} />
         <Route path="/user/register" component={AuthPage} />
@@ -138,10 +157,7 @@ function Router() {
           <AdminLayout><AdminHostApplications /></AdminLayout>
         </Route>
 
-        {/* === USER SECTION (Root) === */}
-        <Route path="/">
-          <UserLayout><Home /></UserLayout>
-        </Route>
+        {/* === USER SECTION === */}
         <Route path="/home">
           <UserLayout><Home /></UserLayout>
         </Route>
