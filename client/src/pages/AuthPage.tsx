@@ -101,7 +101,8 @@ export default function AuthPage() {
                         </button>
                     </div>
 
-                    {isLogin ? (
+                    <div key={isLogin ? "login-section" : "register-section"} className="w-full">
+                        {isLogin ? (
                         <Form {...loginForm}>
                             <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
                                 <FormField
@@ -111,6 +112,7 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
+                                                    id="login-username"
                                                     placeholder="Username"
                                                     {...field}
                                                     autoComplete="username"
@@ -128,6 +130,7 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
+                                                    id="login-password"
                                                     type="password"
                                                     placeholder="Password"
                                                     {...field}
@@ -147,6 +150,7 @@ export default function AuthPage() {
                                         <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                                             <FormControl>
                                                 <Checkbox
+                                                    id="login-remember"
                                                     checked={field.value}
                                                     onCheckedChange={field.onChange}
                                                     className="border-purple-400 data-[state=checked]:bg-purple-500"
@@ -178,7 +182,8 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="Your name"
+                                                    id="register-name"
+                                                    placeholder="Name"
                                                     {...field}
                                                     autoComplete="name"
                                                     className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
@@ -195,7 +200,8 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="Username"
+                                                    id="register-username"
+                                                    placeholder="User Name"
                                                     {...field}
                                                     autoComplete="username"
                                                     className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
@@ -212,8 +218,9 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
+                                                    id="register-email"
                                                     type="email"
-                                                    placeholder="Email address"
+                                                    placeholder="Email"
                                                     {...field}
                                                     autoComplete="email"
                                                     className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
@@ -230,6 +237,7 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
+                                                    id="register-phone"
                                                     type="tel"
                                                     placeholder="Phone number (+27...)"
                                                     {...field}
@@ -248,6 +256,7 @@ export default function AuthPage() {
                                         <FormItem>
                                             <FormControl>
                                                 <Input
+                                                    id="register-password"
                                                     type="password"
                                                     placeholder="Create password"
                                                     {...field}
@@ -267,6 +276,7 @@ export default function AuthPage() {
                                         <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                                             <FormControl>
                                                 <Checkbox
+                                                    id="register-remember"
                                                     checked={field.value}
                                                     onCheckedChange={field.onChange}
                                                     className="border-purple-400 data-[state=checked]:bg-purple-500"
@@ -325,6 +335,7 @@ export default function AuthPage() {
                             </form>
                         </Form>
                     )}
+                    </div>
                 </div>
 
                 {/* Footer */}
