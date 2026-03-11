@@ -23,9 +23,9 @@ const registerSchema = z.object({
     displayName: z.string().min(2, "Name must be at least 2 characters"),
     username: z.string().min(3, "Username must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
-    phoneNumber: z.string().min(10, "Invalid phone number"),
+    phoneNumber: z.string().optional(),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    interests: z.array(z.string()).min(1, "Select at least one interest"),
+    interests: z.array(z.string()).default([]),
     rememberMe: z.boolean().default(true),
 });
 
@@ -230,26 +230,7 @@ export default function AuthPage() {
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={registerForm.control}
-                                    name="phoneNumber"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <Input
-                                                    id="register-phone"
-                                                    type="tel"
-                                                    placeholder="Phone number (+27...)"
-                                                    {...field}
-                                                    autoComplete="tel"
-                                                    className="bg-purple-700/50 border-2 border-purple-500/50 text-white placeholder:text-purple-300/60 focus-visible:ring-2 focus-visible:ring-purple-300 rounded-xl h-12 font-medium transition-all focus:bg-purple-700 focus:border-purple-400"
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-purple-300" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
+                                 <FormField
                                     control={registerForm.control}
                                     name="password"
                                     render={({ field }) => (
@@ -269,62 +250,9 @@ export default function AuthPage() {
                                     )}
                                 />
                                 
-                                <FormField
-                                    control={registerForm.control}
-                                    name="rememberMe"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                                            <FormControl>
-                                                <Checkbox
-                                                    id="register-remember"
-                                                    checked={field.value}
-                                                    onCheckedChange={field.onChange}
-                                                    className="border-purple-400 data-[state=checked]:bg-purple-500"
-                                                />
-                                            </FormControl>
-                                            <Label className="text-sm font-medium text-purple-200 cursor-pointer">
-                                                Remember Me
-                                            </Label>
-                                        </FormItem>
-                                    )}
-                                />
+                                {/* Interests removed from registration flow for simplicity as requested */}
                                 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-purple-200">Interests</label>
-                                    <FormField
-                                        control={registerForm.control}
-                                        name="interests"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {["Coffee", "Music", "Nightlife", "Food", "Art", "Sports", "Photography", "Travel"].map((interest) => (
-                                                            <button
-                                                                key={interest}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const current = field.value || [];
-                                                                    const updated = current.includes(interest.toLowerCase())
-                                                                        ? current.filter(i => i !== interest.toLowerCase())
-                                                                        : [...current, interest.toLowerCase()];
-                                                                    field.onChange(updated);
-                                                                }}
-                                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                                                                    (field.value || []).includes(interest.toLowerCase())
-                                                                        ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
-                                                                        : "bg-purple-800 text-purple-200 hover:bg-purple-700 border border-purple-600"
-                                                                }`}
-                                                            >
-                                                                {interest}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </FormControl>
-                                                <FormMessage className="text-purple-300" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                {/* Interests can be updated in profile later */}
                                 <Button
                                     type="submit"
                                     className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold shadow-lg transition-transform active:scale-95"

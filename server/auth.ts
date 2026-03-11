@@ -135,8 +135,8 @@ export function setupAuth(app: Express) {
         try {
             const { username, password, email, phoneNumber, displayName, interests } = req.body;
 
-            if (!username || !password || !email || !phoneNumber || !displayName) {
-                return res.status(400).json({ message: "All fields are required" });
+            if (!username || !password || !email || !displayName) {
+                return res.status(400).json({ message: "Name, User Name, Email and Password are required" });
             }
 
             const existingUser = await storage.getUserByUsername(username);

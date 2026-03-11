@@ -96,8 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             queryClient.setQueryData(["/api/users/me"], data.user);
             toast({ title: "Logged in successfully" });
         },
-        onError: () => {
-            toast({ title: "Login failed", description: "Check your credentials" });
+        onError: (error: any) => {
+            toast({ 
+                title: "Login failed", 
+                description: error.message || "Check your credentials",
+                variant: "destructive"
+            });
         },
     });
 
@@ -111,8 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             queryClient.setQueryData(["/api/users/me"], data.user);
             toast({ title: "Registration successful", description: "Welcome to Trendle!" });
         },
-        onError: () => {
-            toast({ title: "Registration failed", description: "Try again" });
+        onError: (error: any) => {
+            toast({ 
+                title: "Registration failed", 
+                description: error.message || "Something went wrong. Please try again.",
+                variant: "destructive"
+            });
         },
     });
 
