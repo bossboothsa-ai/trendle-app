@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useUserStories } from "@/hooks/use-trendle";
 import { X } from "lucide-react";
 
@@ -71,8 +72,8 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 bg-black z-[100000] flex items-center justify-center">
       {/* Background click to close */}
       <div className="absolute inset-0" onClick={() => {
         onClose();
@@ -189,6 +190,7 @@ export function StoryModal({ userId, onClose }: StoryModalProps) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

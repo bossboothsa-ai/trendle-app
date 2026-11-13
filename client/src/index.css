@@ -22,27 +22,37 @@
   --text-secondary: #C9C6FF;
   --text-muted: #8B85C9;
 
-  --glass-bg: rgba(255,255,255,0.06);
-  --glass-border: rgba(255,255,255,0.12);
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.12);
 
   /* Shadcn standard mappings logic to support neon purple */
-  --background: 255 62% 6%; /* #0B061A */
-  --foreground: 0 0% 100%; /* #FFFFFF */
-  
-  --primary: 262 83% 58%; /* #7C3AED */
+  --background: 255 62% 6%;
+  /* #0B061A */
+  --foreground: 0 0% 100%;
+  /* #FFFFFF */
+
+  --primary: 262 83% 58%;
+  /* #7C3AED */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 257 64% 11%; /* #140A2E */
-  --secondary-foreground: 243 100% 89%; /* #C9C6FF */
+  --secondary: 257 64% 11%;
+  /* #140A2E */
+  --secondary-foreground: 243 100% 89%;
+  /* #C9C6FF */
 
-  --accent: 330 81% 60%; /* #EC4899 */
+  --accent: 330 81% 60%;
+  /* #EC4899 */
   --accent-foreground: 0 0% 100%;
 
-  --muted: 257 64% 11%; /* Surface */
-  --muted-foreground: 245 40% 65%; /* #8B85C9 */
+  --muted: 257 64% 11%;
+  /* Surface */
+  --muted-foreground: 245 40% 65%;
+  /* #8B85C9 */
 
-  --card: 257 64% 11%; /* Surface */
-  --card-foreground: 0 0% 100%; /* White */
+  --card: 257 64% 11%;
+  /* Surface */
+  --card-foreground: 0 0% 100%;
+  /* White */
 
   --border: 245 40% 25%;
   --input: 245 40% 25%;
@@ -55,11 +65,11 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     background:
-      radial-gradient(circle at 20% 20%, rgba(139,92,246,0.25), transparent 40%),
-      radial-gradient(circle at 80% 30%, rgba(236,72,153,0.18), transparent 45%),
+      radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.25), transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(236, 72, 153, 0.18), transparent 45%),
       var(--bg-main);
     background-attachment: fixed;
     color: var(--text-primary);
@@ -67,17 +77,24 @@
     font-family: var(--font-body);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     @apply font-bold tracking-tight;
   }
 }
 
 @layer components {
+
   /* Custom Scrollbar for horizontal lists */
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -91,11 +108,11 @@
     border: 1px solid var(--glass-border);
     border-radius: 20px;
   }
-  
+
   .glass {
     @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg;
   }
-  
+
   .glass-dark {
     @apply bg-black/40 backdrop-blur-md border border-white/10 text-white shadow-xl;
   }
@@ -103,10 +120,10 @@
   /* Bottom Navigation Active State */
   .nav-item-active {
     color: var(--purple-electric);
-    filter: drop-shadow(0 0 8px rgba(139,92,246,0.8));
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.8));
     position: relative;
   }
-  
+
   .nav-item-active::after {
     content: '';
     @apply absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full;
@@ -116,15 +133,18 @@
 
   /* Layout Discipline */
   .layout-unit {
-    @apply p-4 md:p-6; /* 16px to 24px */
+    @apply p-4 md:p-6;
+    /* 16px to 24px */
   }
 
   .section-gap {
-    @apply space-y-6; /* 24px */
+    @apply space-y-6;
+    /* 24px */
   }
 
   .screen-padding {
-    @apply px-4; /* 16px standard mobile padding */
+    @apply px-4;
+    /* 16px standard mobile padding */
   }
 
   .truncate-name {
@@ -132,40 +152,46 @@
   }
 
   /* Typography Hierarchy */
-  .text-weight-bold { @apply font-bold; }
-  .text-weight-medium { @apply font-semibold; }
-  .text-weight-regular { @apply font-normal; }
+  .text-weight-bold {
+    @apply font-bold;
+  }
+
+  .text-weight-medium {
+    @apply font-semibold;
+  }
+
+  .text-weight-regular {
+    @apply font-normal;
+  }
 
   /* App Specific Components - Neo-Purple */
   .btn-primary {
-    background: linear-gradient(
-      135deg,
-      #7C3AED,
-      #A855F7,
-      #EC4899
-    ) !important;
-    color: white !important;
-    border-radius: 14px !important;
-    border: none !important;
+    background: linear-gradient(135deg,
+        #7C3AED,
+        #A855F7,
+        #EC4899);
+    color: white;
+    border-radius: 14px;
+    border: none;
     box-shadow:
-      0 0 20px rgba(139,92,246,0.5),
-      0 10px 30px rgba(76,29,149,0.45) !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+      0 0 20px rgba(139, 92, 246, 0.5),
+      0 10px 30px rgba(76, 29, 149, 0.45);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .btn-primary:hover {
-    transform: translateY(-1px) !important;
+    transform: translateY(-1px);
   }
 
   .header-glow {
-    background: rgba(11, 6, 26, 0.7) !important;
-    backdrop-filter: blur(18px) !important;
-    -webkit-backdrop-filter: blur(18px) !important;
-    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    background: rgba(11, 6, 26, 0.7);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .post-card {
-    box-shadow: 0 10px 40px rgba(76,29,149,0.35);
+    box-shadow: 0 10px 40px rgba(76, 29, 149, 0.35);
     background: var(--bg-surface);
     border: 1px solid var(--glass-border);
     transition: transform 0.2s ease;
@@ -178,20 +204,26 @@
   }
 
   .reward-card {
-    background: linear-gradient(
-        135deg,
-        rgba(124,58,237,0.35),
-        rgba(236,72,153,0.25)
-      ) !important;
+    background: linear-gradient(135deg,
+        rgba(124, 58, 237, 0.35),
+        rgba(236, 72, 153, 0.25)) !important;
     border: 1px solid var(--glass-border);
   }
 }
 
 /* Animations */
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .animate-float {
@@ -199,6 +231,13 @@
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 0.5; }
-  100% { transform: scale(1.3); opacity: 0; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
 }
