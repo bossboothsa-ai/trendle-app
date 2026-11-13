@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development PORT=3001 tsx server/index.ts",
-    "build": "tsx script/build.ts",
+    "build": "npm run db:push && tsx script/build.ts",
     "build:static": "vite build",
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "check": "tsc",

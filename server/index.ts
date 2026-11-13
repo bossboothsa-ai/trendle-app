@@ -1,3 +1,13 @@
+// Global error handlers to surface hidden crashes
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+  process.exit(1);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason);
+  process.exit(1);
+});
+
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
@@ -63,7 +73,9 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    console.log("STEP 1: registering routes...");
     await registerRoutes(httpServer, app);
+    console.log("STEP 2: routes registered");
 
     app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -78,6 +90,7 @@ app.use((req, res, next) => {
       return res.status(status).json({ message });
     });
 
+    console.log("STEP 3: setting up static/vite...");
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
@@ -87,6 +100,7 @@ app.use((req, res, next) => {
       const { setupVite } = await import("./vite");
       await setupVite(httpServer, app);
     }
+    console.log("STEP 4: static/vite ready");
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
     // Other ports are firewalled. Default to 5000 if not specified.

@@ -14,15 +14,23 @@ import { pool } from "./db";
 const PostgresStore = connectPg(session);
 
 export function setupAuth(app: Express) {
+    let store: any;
+    try {
+      store = new PostgresStore({
+        pool,
+        tableName: "sessions",
+        createTableIfMissing: true,
+      });
+    } catch (e) {
+      console.error("Failed to create Postgres session store, falling back to memory:", e);
+      store = undefined;
+    }
+
     const sessionSettings: session.SessionOptions = {
         secret: process.env.SESSION_SECRET || "trendle_secret_key",
         resave: false,
         saveUninitialized: false,
-        store: new PostgresStore({
-            pool,
-            tableName: "sessions",
-            createTableIfMissing: true,
-        }),
+        ...(store ? { store } : {}),
         cookie: {
             secure: process.env.NODE_ENV === "production",
             maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
