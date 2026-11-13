@@ -15,8 +15,10 @@ services:
         generateValue: true
       - key: PORT
         value: 5001
-      - key: APP_MODE
-        value: soft_launch
+      - key: APP_URL
+        value: https://trendle-app.onrender.com
+      - key: RESEND_API_KEY
+        sync: false
 
 databases:
   - name: trendle-db
