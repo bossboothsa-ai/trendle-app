@@ -4,18 +4,23 @@ import * as schema from "@shared/schema";
 
 const { Pool } = pg;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+let pool: pg.Pool | null = null;
+
+if (process.env.DATABASE_URL) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 10000,
+    ssl:
+      process.env.NODE_ENV === "production"
+        ? { rejectUnauthorized: false }
+        : false,
+  });
+} else {
+  console.warn(
+    "⚠️  DATABASE_URL is not set. Database features will be unavailable. " +
+      "Set DATABASE_URL in your environment to enable persistence.",
   );
 }
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: 10000, // Increase timeout to 10 seconds
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : false,
-});
-export const db = drizzle(pool, { schema });
+export { pool };
+export const db = pool ? drizzle(pool, { schema }) : (null as any);

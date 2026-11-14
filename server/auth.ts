@@ -15,15 +15,19 @@ const PostgresStore = connectPg(session);
 
 export function setupAuth(app: Express) {
     let store: any;
-    try {
-      store = new PostgresStore({
-        pool,
-        tableName: "sessions",
-        createTableIfMissing: true,
-      });
-    } catch (e) {
-      console.error("Failed to create Postgres session store, falling back to memory:", e);
-      store = undefined;
+    if (pool) {
+      try {
+        store = new PostgresStore({
+          pool,
+          tableName: "sessions",
+          createTableIfMissing: true,
+        });
+      } catch (e) {
+        console.error("Failed to create Postgres session store, falling back to memory:", e);
+        store = undefined;
+      }
+    } else {
+      console.warn("⚠️  No database pool; using in-memory sessions (not persistent).");
     }
 
     const sessionSettings: session.SessionOptions = {
